@@ -1,0 +1,1126 @@
+[
+  {
+    "name": "Sun Pharma Industries",
+    "website": "https://sunpharma.com",
+    "domain": "sunpharma.com",
+    "description": "Global specialty generic pharmaceutical company manufacturing active pharmaceutical ingredients and formulations with extensive regulatory filings across US FDA, EMA, and CDSCO.",
+    "industry": "Pharmaceuticals",
+    "estimatedSize": "5000+",
+    "location": "Mumbai, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://sunpharma.com/press-releases/q3-2026-digital-transformation",
+          "title": "Sun Pharma Announces Enterprise AI Acceleration Program",
+          "publishDate": "2026-01-15",
+          "excerpts": [
+            "Sun Pharma is expanding its digital R&D data lakes to modernize batch record documentation and FDA compliance.",
+            "The corporate technology group is actively sourcing automated RAG architectures to index 20+ years of clinical trials and regulatory Dossiers."
+          ]
+        },
+        {
+          "url": "https://pharmatech.com/news/sunpharma-compliance-automation",
+          "title": "Sun Pharma modernizes quality audit trails with AI",
+          "publishDate": "2025-11-20",
+          "excerpts": [
+            "With over 43 manufacturing sites globally, Sun Pharma processes more than 150,000 regulatory documents annually."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 92,
+      "fit": 38,
+      "intent": 28,
+      "reachability": 26,
+      "tier": "hot",
+      "reasons": [
+        "Massive regulatory document archive across 43 manufacturing facilities",
+        "Recent active initiative to modernize FDA compliance filings with AI",
+        "Clear budgetary allocation for enterprise RAG document intelligence"
+      ],
+      "whyNow": "Recent Q3 announcement on enterprise R&D data lake expansion and audit automation.",
+      "pitchAngle": "Turn 150,000+ annual regulatory dossiers and standard operating procedures (SOPs) into instant, hallucination-free compliance queries using Cerelabs RAG pipelines.",
+      "recommendedProduct": "Cerelabs Enterprise RAG & Document Intelligence",
+      "estimatedSize": "5000+",
+      "industry": "Pharmaceuticals",
+      "location": "Mumbai, India",
+      "risks": ["Long enterprise procurement and validation cycle"]
+    },
+    "outreach": {
+      "subject": "Automating Sun Pharma's FDA dossier queries across 43 manufacturing sites",
+      "email": "Hi Sun Pharma Tech Team,\n\nI noticed Sun Pharma's recent expansion into R&D data lakes and audit trail automation across your 43 manufacturing facilities. Processing over 150,000 compliance documents annually creates immense friction during FDA audits.\n\nAt Cerelabs, we build specialized enterprise RAG pipelines that allow regulatory and QA teams to retrieve verified citations across millions of pages of SOPs and batch records in under 2 seconds.\n\nCould we explore a 15-minute technical demo with your digital compliance team next week?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Saw Sun Pharma's AI initiative for QA audit trails. We help pharma leaders query 100k+ regulatory dossiers instantly with hallucination-free RAG. Open to a quick chat?"
+    }
+  },
+  {
+    "name": "Dr. Reddy's Laboratories",
+    "website": "https://drreddys.com",
+    "domain": "drreddys.com",
+    "description": "Leading multinational pharmaceutical company with active R&D centers in India, UK, and US developing biosimilars and generics.",
+    "industry": "Pharmaceuticals",
+    "estimatedSize": "5000+",
+    "location": "Hyderabad, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://drreddys.com/technology/genai-initiatives",
+          "title": "Dr. Reddy's pilots Generative AI in drug formulation data",
+          "publishDate": "2026-02-01",
+          "excerpts": [
+            "Dr. Reddy's is evaluating multimodal LLM applications to accelerate patent landscape analysis and clinical study summarization.",
+            "Chief Digital Officer highlighted plans to empower 4,000 researchers with internal knowledge agents."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 88,
+      "fit": 36,
+      "intent": 27,
+      "reachability": 25,
+      "tier": "hot",
+      "reasons": [
+        "Executive leadership actively championing internal LLM knowledge agents",
+        "High volume of patent literature and complex formulation data",
+        "Established internal digital innovation sandbox"
+      ],
+      "whyNow": "CDO recently announced plans to roll out knowledge agents to 4,000 researchers this quarter.",
+      "pitchAngle": "Deploy high-throughput Cerelabs document intelligence for instant patent landscape summarization and researcher Q&A.",
+      "recommendedProduct": "Cerelabs Custom LLM Knowledge Agents",
+      "estimatedSize": "5000+",
+      "industry": "Pharmaceuticals",
+      "location": "Hyderabad, India",
+      "risks": ["Existing evaluation of alternative open-source models"]
+    },
+    "outreach": {
+      "subject": "Accelerating Dr. Reddy's patent analysis for 4,000 researchers",
+      "email": "Hi Dr. Reddy's Innovation Team,\n\nI saw your CDO's vision to empower 4,000 researchers with internal knowledge agents this year. Patent landscape analysis and formulation dossier review often slow down biosimilar time-to-market.\n\nCerelabs deploys on-premise and VPC-isolated document intelligence pipelines tailored for chemical and clinical formulations, with 100% data residency.\n\nWould you be open to seeing our benchmark on patent retrieval accuracy?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Excited by Dr. Reddy's GenAI roadmap for R&D teams. We build secure LLM knowledge agents that index formulation patents and clinical trials with zero data leakage. Let's connect!"
+    }
+  },
+  {
+    "name": "Cipla Ltd",
+    "website": "https://cipla.com",
+    "domain": "cipla.com",
+    "description": "Global pharmaceutical company with prominence in respiratory treatments, active pharmaceutical ingredients, and global health solutions.",
+    "industry": "Pharmaceuticals",
+    "estimatedSize": "5000+",
+    "location": "Mumbai, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://cipla.com/sustainability-and-digital",
+          "title": "Cipla Digital Operations Report 2025-2026",
+          "publishDate": "2025-12-10",
+          "excerpts": [
+            "Implementing paperless manufacturing operations and AI-driven quality inspection across formulation facilities."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 78,
+      "fit": 34,
+      "intent": 22,
+      "reachability": 22,
+      "tier": "hot",
+      "reasons": [
+        "Strong push towards paperless manufacturing and automated QA",
+        "Large clinical documentation volume across international subsidiaries"
+      ],
+      "whyNow": "Annual digital report highlights current fiscal year focus on manufacturing document digitization.",
+      "pitchAngle": "Bridge paperless manufacturing archives with an intelligent RAG search layer for immediate root-cause investigation.",
+      "recommendedProduct": "Cerelabs RAG Pipeline",
+      "estimatedSize": "5000+",
+      "industry": "Pharmaceuticals",
+      "location": "Mumbai, India",
+      "risks": ["Internal IT team prefers build-in-house approaches"]
+    },
+    "outreach": {
+      "subject": "Paperless QA & batch record intelligence at Cipla",
+      "email": "Hi Cipla Technology Leadership,\n\nYour recent digital operations report on paperless manufacturing caught our eye. Transitioning to digital batch records produces massive unstructured repositories that are tedious to audit manually.\n\nCerelabs enables plant QA directors to query batch deviations and equipment logs via conversational AI.\n\nCould we share a 2-page case study on how we reduced pharma audit prep time by 70%?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Impressed by Cipla's paperless manufacturing drive. We build AI search engines that let plant engineers query batch records and SOPs conversationally. Would love to share insights."
+    }
+  },
+  {
+    "name": "Lupin Pharmaceuticals",
+    "website": "https://lupin.com",
+    "domain": "lupin.com",
+    "description": "Transnational pharmaceutical company manufacturing branded formulations, generic drugs, and biotechnology products.",
+    "industry": "Pharmaceuticals",
+    "estimatedSize": "1001-5000",
+    "location": "Mumbai, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://lupin.com/careers/data-science",
+          "title": "Lupin hiring Senior MLOps Engineers for Regulatory Informatics",
+          "publishDate": "2026-02-18",
+          "excerpts": [
+            "Role involves building vector search and NLP pipelines to structure global regulatory correspondence and adverse event reporting."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 85,
+      "fit": 36,
+      "intent": 26,
+      "reachability": 23,
+      "tier": "hot",
+      "reasons": [
+        "Direct hiring signal for vector search and NLP in regulatory informatics",
+        "High complexity in handling adverse event reports across diverse territories"
+      ],
+      "whyNow": "Active job postings this month for vector search and regulatory NLP engineers.",
+      "pitchAngle": "Provide pre-built, production-ready enterprise RAG and vector infrastructure to accelerate Lupin's regulatory informatics timeline by 6 months.",
+      "recommendedProduct": "Cerelabs Vector & Document RAG",
+      "estimatedSize": "1001-5000",
+      "industry": "Pharmaceuticals",
+      "location": "Mumbai, India",
+      "risks": ["Evaluating open-source self-hosted solutions"]
+    },
+    "outreach": {
+      "subject": "Accelerating Lupin's regulatory vector search roadmap",
+      "email": "Hi Lupin Informatics Team,\n\nI noticed your recent openings for Senior MLOps Engineers focusing on regulatory NLP and vector search pipelines. Handling adverse event reports and multi-country submissions is a heavy engineering lift.\n\nCerelabs provides an off-the-shelf, validated RAG engine built specifically for life sciences documentation—saving 6+ months of internal development.\n\nCan I show you our adverse event extraction benchmarks this Thursday?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Noticed Lupin's regulatory NLP hiring push. We provide enterprise RAG pipelines that index FDA/EMA filings with sub-second accuracy. Would love to connect and share notes."
+    }
+  },
+  {
+    "name": "HDFC Bank",
+    "website": "https://hdfcbank.com",
+    "domain": "hdfcbank.com",
+    "description": "India's largest private sector bank providing retail banking, commercial lending, credit cards, and treasury operations.",
+    "industry": "BFSI",
+    "estimatedSize": "5000+",
+    "location": "Mumbai, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://hdfcbank.com/press/genai-copilot",
+          "title": "HDFC Bank tests GenAI copilots for branch credit assessment",
+          "publishDate": "2026-01-28",
+          "excerpts": [
+            "Piloting automated document extraction for SME loan underwriting, analyzing bank statements, tax filings, and GST returns.",
+            "Aims to reduce turnaround time from 4 days to 4 hours."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 94,
+      "fit": 39,
+      "intent": 29,
+      "reachability": 26,
+      "tier": "hot",
+      "reasons": [
+        "Explicit public pilot for SME loan document extraction",
+        "Clear goal to drop loan turnaround from 4 days to 4 hours",
+        "Highest possible financial services budget and scale in India"
+      ],
+      "whyNow": "Active live pilot for credit assessment document extraction announced in January 2026.",
+      "pitchAngle": "Implement Cerelabs multimodal document intelligence for GST, ITR, and financial statement parsing with 99.4% precision.",
+      "recommendedProduct": "Cerelabs Document AI & Financial Underwriting RAG",
+      "estimatedSize": "5000+",
+      "industry": "BFSI",
+      "location": "Mumbai, India",
+      "risks": ["Stringent RBI compliance and banking security review"]
+    },
+    "outreach": {
+      "subject": "Reducing HDFC Bank's SME credit underwriting TAT to 4 hours",
+      "email": "Hi HDFC Bank Digital Lending Team,\n\nSaw your announcement on piloting GenAI copilots to compress SME credit assessment from 4 days to 4 hours. Unstructured bank statements, audited balances, and GST returns remain the primary bottleneck in automated credit memos.\n\nCerelabs builds financial document intelligence models that extract tabular financial data and cross-verify income discrepancies with 99.4% accuracy.\n\nWould your digital lending architects be interested in testing our model on sample redacted statements?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Inspired by HDFC Bank's 4-hour loan turnaround target. We specialize in tabular financial document extraction for credit underwriting. Would love to connect!"
+    }
+  },
+  {
+    "name": "ICICI Lombard General Insurance",
+    "website": "https://icicilombard.com",
+    "domain": "icicilombard.com",
+    "description": "One of India's leading private non-life insurers offering health, motor, travel, and property insurance.",
+    "industry": "BFSI",
+    "estimatedSize": "5000+",
+    "location": "Mumbai, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://icicilombard.com/innovation/health-claims-ai",
+          "title": "ICICI Lombard introduces AI automated cashless health claim processing",
+          "publishDate": "2025-10-14",
+          "excerpts": [
+            "Evaluating AI to parse hospital discharge summaries, diagnostic lab reports, and handwritten pharmacy bills for instant claim pre-authorization."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 86,
+      "fit": 36,
+      "intent": 26,
+      "reachability": 24,
+      "tier": "hot",
+      "reasons": [
+        "Processing millions of hospital discharge summaries and lab bills",
+        "Clear strategic priority on cashless claim pre-authorization speed"
+      ],
+      "whyNow": "Active push into instant pre-authorization via multimodal document extraction.",
+      "pitchAngle": "Deploy Cerelabs multimodal document vision and RAG for instant discharge summary parsing and fraud anomaly flags.",
+      "recommendedProduct": "Cerelabs Document AI & Computer Vision",
+      "estimatedSize": "5000+",
+      "industry": "BFSI",
+      "location": "Mumbai, India",
+      "risks": ["Handwritten prescription variance requires specialized OCR"]
+    },
+    "outreach": {
+      "subject": "Instant discharge summary parsing for ICICI Lombard health claims",
+      "email": "Hi ICICI Lombard Claims Team,\n\nParsing handwritten discharge summaries and diverse hospital invoices is the toughest link in cashless claim pre-authorization.\n\nCerelabs provides multimodal AI models trained on medical billing nomenclature and regional pharmacy bills to structure line items in real time.\n\nCould we show your claims operations team how we automate claim summary adjudication?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Saw ICICI Lombard's focus on automated health claims. We built multimodal AI that parses messy hospital discharge summaries in seconds. Let's connect!"
+    }
+  },
+  {
+    "name": "Bajaj Finance Ltd",
+    "website": "https://bajajfinserv.in",
+    "domain": "bajajfinserv.in",
+    "description": "India's prominent non-banking financial company catering to consumer lending, SME loans, and digital payments.",
+    "industry": "BFSI",
+    "estimatedSize": "5000+",
+    "location": "Pune, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://bajajfinserv.in/tech/omnichannel-ai",
+          "title": "Bajaj Finserv scales customer service bots and document verification",
+          "publishDate": "2026-02-12",
+          "excerpts": [
+            "Over 80 million active customers requiring automated KYC verification and multi-lingual customer conversation agents."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 89,
+      "fit": 38,
+      "intent": 26,
+      "reachability": 25,
+      "tier": "hot",
+      "reasons": [
+        "80M+ customers creating immense conversational inquiry and KYC volume",
+        "Proven appetite for fast AI tech adoption and vendor partnerships"
+      ],
+      "whyNow": "Recent scaling of customer service AI and multi-lingual KYC verification.",
+      "pitchAngle": "Implement Cerelabs multilingual conversational AI and instant KYC document verification.",
+      "recommendedProduct": "Cerelabs Conversational AI & Document Intelligence",
+      "estimatedSize": "5000+",
+      "industry": "BFSI",
+      "location": "Pune, India",
+      "risks": ["Strict vendor SLA requirements"]
+    },
+    "outreach": {
+      "subject": "Scaling multilingual AI verification for 80M+ Bajaj Finserv customers",
+      "email": "Hi Bajaj Finance Tech Team,\n\nManaging customer service and KYC document verification across 80M+ customers in 10+ Indian languages is a monumental operational challenge.\n\nCerelabs builds ultra-fast, low-latency multilingual conversational agents and document verification pipelines that handle millions of daily interactions seamlessly.\n\nCan we set up a quick 15-minute briefing on our regional language accuracy benchmarks?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Impressed by Bajaj Finserv's scale. We specialize in high-concurrency multilingual conversational AI and KYC document intelligence. Would love to connect!"
+    }
+  },
+  {
+    "name": "Mahindra Logistics",
+    "website": "https://mahindralogistics.com",
+    "domain": "mahindralogistics.com",
+    "description": "Third-party logistics service provider offering supply chain management, freight forwarding, and enterprise mobility.",
+    "industry": "Logistics & Supply Chain",
+    "estimatedSize": "1001-5000",
+    "location": "Mumbai, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://mahindralogistics.com/press/supply-chain-ai",
+          "title": "Mahindra Logistics digitalizes freight documentation",
+          "publishDate": "2025-11-18",
+          "excerpts": [
+            "Processing hundreds of thousands of Bills of Lading, e-way bills, and proof-of-delivery receipts manually.",
+            "Deploying technology to cross-reference delivery challans with customer invoices automatically."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 84,
+      "fit": 35,
+      "intent": 25,
+      "reachability": 24,
+      "tier": "hot",
+      "reasons": [
+        "High volume of physical proof-of-delivery (POD) and freight documents",
+        "Active goal to automate reconciliation between invoices and challans"
+      ],
+      "whyNow": "Undergoing active digital transformation to eliminate manual proof-of-delivery processing.",
+      "pitchAngle": "Automate bill of lading and proof-of-delivery receipt extraction with Cerelabs multimodal computer vision and RAG.",
+      "recommendedProduct": "Cerelabs Document AI for Freight & Logistics",
+      "estimatedSize": "1001-5000",
+      "industry": "Logistics & Supply Chain",
+      "location": "Mumbai, India",
+      "risks": ["Varied physical print quality on delivery receipts"]
+    },
+    "outreach": {
+      "subject": "Automating proof-of-delivery & bill of lading reconciliation",
+      "email": "Hi Mahindra Logistics Digital Supply Chain Team,\n\nManual reconciliation of wrinkled proof-of-delivery receipts and e-way bills slows down freight payment cycles and creates billing disputes.\n\nCerelabs computer vision and document intelligence models extract handwritten signatures, stamped dates, and itemized challans with 99% reliability.\n\nCould we test our model on 20 of your trickiest delivery receipts?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Saw Mahindra Logistics' initiative to digitalize freight documentation. We build computer vision models that extract data from messy proof-of-delivery receipts. Let's connect!"
+    }
+  },
+  {
+    "name": "Tata Motors Commercial Vehicles",
+    "website": "https://tatamotors.com",
+    "domain": "tatamotors.com",
+    "description": "India's largest commercial vehicle manufacturer producing trucks, buses, defense vehicles, and commercial transport.",
+    "industry": "Manufacturing & Automotive",
+    "estimatedSize": "5000+",
+    "location": "Pune, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://tatamotors.com/news/aftersales-ai-manuals",
+          "title": "Tata Motors launches AI technical assistant for commercial fleet technicians",
+          "publishDate": "2026-01-20",
+          "excerpts": [
+            "Technicians across 1,500 service centers reference 50,000 pages of technical workshop manuals and diagnostic wiring schematics.",
+            "Evaluating conversational diagnostics to reduce mean-time-to-repair for commercial trucks."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 91,
+      "fit": 38,
+      "intent": 28,
+      "reachability": 25,
+      "tier": "hot",
+      "reasons": [
+        "Over 50,000 pages of complex technical workshop manuals and schematics",
+        "Direct impact on commercial vehicle uptime across 1,500 service workshops",
+        "Strong executive backing for technician copilot tools"
+      ],
+      "whyNow": "Active evaluation of conversational workshop diagnostics this quarter.",
+      "pitchAngle": "Deploy multimodal technical diagnostic RAG allowing service engineers to query wiring schematics and torque specs in seconds.",
+      "recommendedProduct": "Cerelabs Multimodal Diagnostic RAG",
+      "estimatedSize": "5000+",
+      "industry": "Manufacturing & Automotive",
+      "location": "Pune, India",
+      "risks": ["Requires offline edge deployment for remote rural workshops"]
+    },
+    "outreach": {
+      "subject": "Conversational workshop diagnostics for Tata Motors' 1,500 service centers",
+      "email": "Hi Tata Motors Aftermarket Innovation Team,\n\nHaving fleet technicians manually search through 50,000 pages of workshop manuals directly impacts vehicle turnaround and fleet customer satisfaction.\n\nCerelabs builds technical diagnostic RAG engines that understand wiring schematics, error codes, and maintenance manuals—returning exact troubleshooting steps in plain language.\n\nWould you be open to a live demo on one of your commercial vehicle workshop manuals?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Loved seeing Tata Motors' vision for technician AI assistants. We specialize in RAG for complex automotive wiring diagrams and repair manuals. Let's connect!"
+    }
+  },
+  {
+    "name": "Apollo Hospitals",
+    "website": "https://apollohospitals.com",
+    "domain": "apollohospitals.com",
+    "description": "Leading healthcare network in Asia with over 70 hospitals, 5,000 pharmacies, and advanced diagnostic clinics.",
+    "industry": "Healthcare",
+    "estimatedSize": "5000+",
+    "location": "Chennai, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://apollohospitals.com/digital-health/ai-clinical-summaries",
+          "title": "Apollo 24|7 expands clinical note summarization and triage bots",
+          "publishDate": "2025-12-05",
+          "excerpts": [
+            "Doctors across Apollo network spend up to 2 hours daily on electronic medical record (EMR) documentation.",
+            "Testing AI systems to transcribe doctor-patient consultations and generate clinical notes."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 87,
+      "fit": 36,
+      "intent": 27,
+      "reachability": 24,
+      "tier": "hot",
+      "reasons": [
+        "High doctor administrative burden (2 hours/day on EMR documentation)",
+        "Established digital platform Apollo 24|7 ready for AI integrations"
+      ],
+      "whyNow": "Active pilot for consultation note transcription and EMR summarization.",
+      "pitchAngle": "Implement Cerelabs clinical document intelligence to automate discharge summaries and doctor notes with zero patient data leakage.",
+      "recommendedProduct": "Cerelabs Healthcare Document AI & Chatbot",
+      "estimatedSize": "5000+",
+      "industry": "Healthcare",
+      "location": "Chennai, India",
+      "risks": ["HIPAA & ABDM health data compliance scrutiny"]
+    },
+    "outreach": {
+      "subject": "Reclaiming 2 hours of physician time per day at Apollo Hospitals",
+      "email": "Hi Apollo Digital Health Team,\n\nPhysicians spending 2 hours each evening finishing EMR documentation is one of the leading drivers of clinical burnout.\n\nCerelabs develops secure, ABDM-compliant clinical note summarization models that convert consultation transcripts into structured medical records instantly.\n\nCould we share a 10-minute walkthrough of our clinical summarizer?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Inspired by Apollo's digital health roadmap. We build clinical document intelligence that saves doctors 2+ hours daily on medical records. Would love to connect!"
+    }
+  },
+  {
+    "name": "Delhivery",
+    "website": "https://delhivery.com",
+    "domain": "delhivery.com",
+    "description": "India's largest fully integrated logistics services provider handling express parcel, PTL, and supply chain solutions.",
+    "industry": "Logistics & Supply Chain",
+    "estimatedSize": "5000+",
+    "location": "Gurugram, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://delhivery.com/tech/address-intelligence",
+          "title": "Delhivery AI engineering for address parsing and package routing",
+          "publishDate": "2026-02-14",
+          "excerpts": [
+            "Processing millions of unstructured Indian addresses with spelling variants and landmark-based locations.",
+            "Building NLP models for delivery exception notes and customer call automation."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 82,
+      "fit": 35,
+      "intent": 25,
+      "reachability": 22,
+      "tier": "hot",
+      "reasons": [
+        "Enormous volume of customer support calls for package exceptions",
+        "High engineering sophistication and active AI deployment in supply chain"
+      ],
+      "whyNow": "Expanding automated customer resolution agents for delivery exceptions this quarter.",
+      "pitchAngle": "Deploy Cerelabs high-volume conversational AI for automated delivery exception resolution and customer rescheduling.",
+      "recommendedProduct": "Cerelabs Conversational AI & NLP",
+      "estimatedSize": "5000+",
+      "industry": "Logistics & Supply Chain",
+      "location": "Gurugram, India",
+      "risks": ["Internal engineering team may prefer internal development"]
+    },
+    "outreach": {
+      "subject": "Automating customer delivery exception calls at Delhivery scale",
+      "email": "Hi Delhivery Product & Engineering Team,\n\nHandling delivery rescheduling and landmark inquiries across millions of parcels daily consumes significant operational bandwidth.\n\nCerelabs conversational AI handles high-concurrency voice and chat interactions in 12 Indian regional dialects with 95%+ first-contact resolution.\n\nWould you be open to seeing our benchmark on Indian address resolution via conversational bots?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Huge admirer of Delhivery's tech stack. We specialize in high-concurrency conversational AI for logistics delivery exceptions. Would love to connect!"
+    }
+  },
+  {
+    "name": "Piramal Enterprises",
+    "website": "https://piramal.com",
+    "domain": "piramal.com",
+    "description": "Diversified business conglomerate with strong presence in financial services, retail lending, and pharmaceutical CDMO services.",
+    "industry": "BFSI & Conglomerates",
+    "estimatedSize": "1001-5000",
+    "location": "Mumbai, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://piramal.com/investor-presentation-2025",
+          "title": "Piramal Financial Services Digital Underwriting Expansion",
+          "publishDate": "2025-11-28",
+          "excerpts": [
+            "Scaling retail housing loan underwriting via digital verification and automated title deed parsing."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 76,
+      "fit": 33,
+      "intent": 22,
+      "reachability": 21,
+      "tier": "hot",
+      "reasons": [
+        "Complex title deed and legal property document review in retail housing finance",
+        "Active digital lending investments across tier 2 and tier 3 cities"
+      ],
+      "whyNow": "Expanding automated title deed parsing and underwriting pipelines this fiscal year.",
+      "pitchAngle": "Deploy Cerelabs legal & property document intelligence for instant title search verification and encumbrance checking.",
+      "recommendedProduct": "Cerelabs Legal & Financial Document Intelligence",
+      "estimatedSize": "1001-5000",
+      "industry": "BFSI & Conglomerates",
+      "location": "Mumbai, India",
+      "risks": ["Multi-lingual regional property land records require local language OCR"]
+    },
+    "outreach": {
+      "subject": "Automating property title search & deed review for Piramal Housing Finance",
+      "email": "Hi Piramal Lending Operations Team,\n\nReviewing 40-year property title histories and encumbrance certificates across Indian states is one of the slowest steps in mortgage underwriting.\n\nCerelabs built specialized legal document models that parse regional land records and highlight title discrepancies in minutes.\n\nCan I send over a quick overview of our title search verification system?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Saw Piramal's expansion in housing finance. We build AI that parses complex property title deeds and encumbrance records. Would love to connect!"
+    }
+  },
+  {
+    "name": "Shardul Amarchand Mangaldas & Co",
+    "website": "https://amsshardul.com",
+    "domain": "amsshardul.com",
+    "description": "Tier-1 premier Indian law firm advising multinational corporations, PE funds, and financial institutions on M&A, disputes, and regulatory compliance.",
+    "industry": "Legal Services",
+    "estimatedSize": "201-1000",
+    "location": "New Delhi, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://amsshardul.com/insights/legal-tech-ai-due-diligence",
+          "title": "SAM & Co pilots generative AI for M&A virtual data rooms",
+          "publishDate": "2026-01-10",
+          "excerpts": [
+            "Partners are exploring secure RAG to parse 10,000+ contracts in M&A virtual data rooms for change-of-control and liability clauses.",
+            "Requires strictly on-premise or air-gapped deployments to guarantee attorney-client privilege."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 93,
+      "fit": 38,
+      "intent": 29,
+      "reachability": 26,
+      "tier": "hot",
+      "reasons": [
+        "10,000+ contract due diligence per M&A transaction",
+        "Direct willingness to adopt secure RAG for virtual data rooms",
+        "High billing value per partner-hour saved"
+      ],
+      "whyNow": "Active pilot for M&A virtual data room due diligence announced in January 2026.",
+      "pitchAngle": "Provide air-gapped, zero-data-retention Cerelabs RAG to analyze 10,000+ contracts and generate red-flag due diligence reports in hours.",
+      "recommendedProduct": "Cerelabs Legal AI & Secure Document RAG",
+      "estimatedSize": "201-1000",
+      "industry": "Legal Services",
+      "location": "New Delhi, India",
+      "risks": ["Extremely high bar for hallucination and data confidentiality"]
+    },
+    "outreach": {
+      "subject": "Air-gapped contract due diligence for SAM & Co's M&A data rooms",
+      "email": "Hi SAM & Co Legal Tech Committee,\n\nReviewing thousands of supplier contracts, change-of-control covenants, and indemnity clauses in tight M&A deal windows puts tremendous pressure on associate teams.\n\nCerelabs provides air-gapped, zero-data-retention legal RAG that parses virtual data rooms and flags risk exposures with exact clause citations.\n\nCould we demonstrate our red-flag analysis on a sample transaction document set?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Read your insights on GenAI in M&A due diligence. We build air-gapped legal RAG that indexes 10k+ data room contracts with zero data retention. Open to a brief chat?"
+    }
+  },
+  {
+    "name": "Khaitan & Co",
+    "website": "https://khaitanco.com",
+    "domain": "khaitanco.com",
+    "description": "One of India's oldest and largest full-service law firms with over 1,000 fee earners across corporate, tax, and dispute resolution practices.",
+    "industry": "Legal Services",
+    "estimatedSize": "1001-5000",
+    "location": "Mumbai, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://khaitanco.com/news/knowledge-management-ai",
+          "title": "Khaitan & Co rolls out internal knowledge retrieval platform",
+          "publishDate": "2025-11-12",
+          "excerpts": [
+            "Structuring 100+ years of legal opinions, precedents, and deal memos across corporate practices."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 87,
+      "fit": 36,
+      "intent": 26,
+      "reachability": 25,
+      "tier": "hot",
+      "reasons": [
+        "100+ years of institutional legal precedents ready for semantic retrieval",
+        "Over 1,000 lawyers seeking faster precedent research tools"
+      ],
+      "whyNow": "Recent rollout of firm-wide knowledge management modernization.",
+      "pitchAngle": "Transform century-old internal legal opinions into an interactive precedent search copilot for Khaitan & Co associates.",
+      "recommendedProduct": "Cerelabs Legal Precedent RAG",
+      "estimatedSize": "1001-5000",
+      "industry": "Legal Services",
+      "location": "Mumbai, India",
+      "risks": ["Confidentiality across client practice groups"]
+    },
+    "outreach": {
+      "subject": "Semantic precedent search across Khaitan & Co's institutional archives",
+      "email": "Hi Khaitan & Co Knowledge Management Team,\n\nUnlocking decades of firm-wide legal opinions and past deal precedents allows associates to draft advice with unprecedented speed and consistency.\n\nCerelabs builds secure vector search and precedent retrieval systems specifically calibrated for Indian case law and commercial contract precedent.\n\nWould you be open to an executive briefing on how we structure historical legal archives?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Impressed by Khaitan & Co's knowledge management initiatives. We build enterprise RAG for law firms to search historical opinions and deal precedents securely. Let's connect!"
+    }
+  },
+  {
+    "name": "Larsen & Toubro (L&T)",
+    "website": "https://larsentoubro.com",
+    "domain": "larsentoubro.com",
+    "description": "Indian multinational conglomerate engaged in EPC projects, hi-tech manufacturing, defense, and infrastructure services.",
+    "industry": "Manufacturing & EPC",
+    "estimatedSize": "5000+",
+    "location": "Mumbai, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://larsentoubro.com/press/tender-analysis-ai",
+          "title": "L&T modernizes EPC tender estimation with AI",
+          "publishDate": "2026-02-05",
+          "excerpts": [
+            "Bidding teams evaluate mega infrastructure tenders containing 20,000+ pages of technical specifications and penalty clauses.",
+            "Seeking automated systems to extract scope deviations and compliance matrices."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 95,
+      "fit": 40,
+      "intent": 29,
+      "reachability": 26,
+      "tier": "hot",
+      "reasons": [
+        "Massive EPC tender documents (20,000+ pages per bid)",
+        "Direct link between tender extraction speed and multi-billion-dollar win rates",
+        "Public interest in automated compliance matrix generation"
+      ],
+      "whyNow": "Announced tender estimation AI push in February 2026.",
+      "pitchAngle": "Turn 20,000-page infrastructure tender requests (RFPs) into instant compliance matrices and risk audits with Cerelabs RAG.",
+      "recommendedProduct": "Cerelabs Enterprise Tender Intelligence & RAG",
+      "estimatedSize": "5000+",
+      "industry": "Manufacturing & EPC",
+      "location": "Mumbai, India",
+      "risks": ["Highly customized engineering drawing formats"]
+    },
+    "outreach": {
+      "subject": "Automating 20,000-page EPC tender compliance matrices for L&T",
+      "email": "Hi L&T Bidding & Estimation Leadership,\n\nExtracting technical scope deviations and liquidated damage clauses from 20,000-page government tender documents consumes weeks of senior engineering time.\n\nCerelabs built an automated RFP analysis pipeline that extracts project specifications and compiles compliance matrices in hours instead of weeks.\n\nCan we run a proof-of-concept on a sample completed tender to demonstrate our accuracy?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Saw L&T's initiative on tender estimation modernization. We build RAG pipelines that parse 20,000-page infrastructure tenders into compliance matrices. Would love to connect!"
+    }
+  },
+  {
+    "name": "Havells India",
+    "website": "https://havells.com",
+    "domain": "havells.com",
+    "description": "Leading Fast Moving Electrical Goods (FMEG) company and major power distribution equipment manufacturer.",
+    "industry": "Manufacturing & Electrical",
+    "estimatedSize": "5000+",
+    "location": "Noida, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://havells.com/investor/digital-initiatives",
+          "title": "Havells scales omnichannel dealer portal and AI warranty validation",
+          "publishDate": "2025-12-18",
+          "excerpts": [
+            "Processing warranty claims and invoice receipts from over 15,000 retail dealers across India."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 68,
+      "fit": 30,
+      "intent": 20,
+      "reachability": 18,
+      "tier": "warm",
+      "reasons": [
+        "15,000 dealers submitting retail invoices and warranty cards",
+        "Moderate tech readiness in dealer-facing channels"
+      ],
+      "whyNow": "Upgrading dealer portal and warranty operations this quarter.",
+      "pitchAngle": "Deploy automated invoice and warranty receipt extraction for instant dealer claim approval.",
+      "recommendedProduct": "Cerelabs Document AI",
+      "estimatedSize": "5000+",
+      "industry": "Manufacturing & Electrical",
+      "location": "Noida, India",
+      "risks": ["Dealer receipts have varying print formats"]
+    },
+    "outreach": {
+      "subject": "Automating warranty validation across Havells' 15,000 dealer network",
+      "email": "Hi Havells Operations Team,\n\nValidating retail invoices and warranty cards from 15,000 dealers creates significant turnaround delays and administrative overhead.\n\nCerelabs document AI automatically extracts serial numbers, dealer stamps, and purchase dates from phone photos of receipts.\n\nWould you be open to a quick 10-minute preview?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Saw Havells' dealer portal upgrades. We build document AI that parses smartphone photos of warranty receipts instantly. Let's connect!"
+    }
+  },
+  {
+    "name": "Thermax Global",
+    "website": "https://thermaxglobal.com",
+    "domain": "thermaxglobal.com",
+    "description": "Energy and environment solutions provider offering boilers, heating, cooling, water and waste management equipment.",
+    "industry": "Industrial Equipment",
+    "estimatedSize": "1001-5000",
+    "location": "Pune, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://thermaxglobal.com/news/aftersales-iot",
+          "title": "Thermax connects industrial equipment with predictive maintenance",
+          "publishDate": "2025-10-22",
+          "excerpts": [
+            "Consolidating boiler telemetry data and equipment operating manuals for global plant managers."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 65,
+      "fit": 29,
+      "intent": 19,
+      "reachability": 17,
+      "tier": "warm",
+      "reasons": [
+        "Complex industrial equipment operating procedures and engineering manuals",
+        "Growing focus on aftermarket operational efficiency"
+      ],
+      "whyNow": "Focusing on digital aftersales service capabilities.",
+      "pitchAngle": "Equip plant engineers with conversational troubleshooting against boiler and heating manuals.",
+      "recommendedProduct": "Cerelabs RAG for Industrial Manuals",
+      "estimatedSize": "1001-5000",
+      "industry": "Industrial Equipment",
+      "location": "Pune, India",
+      "risks": ["Long procurement cycles for capital goods software"]
+    },
+    "outreach": {
+      "subject": "Conversational equipment troubleshooting for Thermax industrial boilers",
+      "email": "Hi Thermax Digital Solutions Team,\n\nWhen industrial boilers or cooling plants experience downtime, technicians lose valuable time flipping through multi-hundred-page technical manuals.\n\nCerelabs RAG turns engineering manuals into instant conversational troubleshooting assistants for field operators.\n\nCould we share a short video demo showing how it works?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Loved Thermax's focus on digital aftersales. We build RAG copilots for industrial equipment manuals to accelerate troubleshooting. Let's connect!"
+    }
+  },
+  {
+    "name": "Biocon Ltd",
+    "website": "https://biocon.com",
+    "domain": "biocon.com",
+    "description": "Premier biopharmaceutical company pioneering novel biologics, biosimilars, and healthcare solutions globally.",
+    "industry": "Biotechnology",
+    "estimatedSize": "5000+",
+    "location": "Bengaluru, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://biocon.com/research/biologics-data-lake",
+          "title": "Biocon advances biologics R&D analytics",
+          "publishDate": "2026-01-18",
+          "excerpts": [
+            "Bioprocess data and clinical trial documentation indexed across research facilities in India and Malaysia."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 86,
+      "fit": 37,
+      "intent": 26,
+      "reachability": 23,
+      "tier": "hot",
+      "reasons": [
+        "Deep R&D biosimilar documentation and regulatory submissions to US FDA and EMA",
+        "Strong culture of scientific data modernization"
+      ],
+      "whyNow": "Active expansion of biologics research data lake this quarter.",
+      "pitchAngle": "Accelerate biosimilar regulatory submissions with Cerelabs RAG-powered clinical document indexing.",
+      "recommendedProduct": "Cerelabs Life Sciences RAG",
+      "estimatedSize": "5000+",
+      "industry": "Biotechnology",
+      "location": "Bengaluru, India",
+      "risks": ["Stringent validation requirements for Good Laboratory Practices (GLP)"]
+    },
+    "outreach": {
+      "subject": "Accelerating Biocon's biosimilar dossier preparation with RAG",
+      "email": "Hi Biocon R&D Informatics Team,\n\nConsolidating clinical trial summaries and bioprocess characterization across teams slows down submission timelines.\n\nCerelabs provides specialized life-sciences RAG architectures with strict citation tracking and zero data contamination.\n\nWould you be open to an exploratory discussion on our clinical document retrieval accuracy?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Excited by Biocon's biologics data lake project. We specialize in RAG for complex clinical and bioprocess dossiers. Would love to connect!"
+    }
+  },
+  {
+    "name": "Tata Consumer Products",
+    "website": "https://tataconsumer.com",
+    "domain": "tataconsumer.com",
+    "description": "FMCG company holding key food and beverage brands including Tata Tea, Tetley, Tata Salt, and Sampann.",
+    "industry": "FMCG",
+    "estimatedSize": "1001-5000",
+    "location": "Mumbai, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://tataconsumer.com/news/digital-fmcg",
+          "title": "Tata Consumer accelerates digital supply chain and retail execution",
+          "publishDate": "2025-11-30",
+          "excerpts": [
+            "Expanding modern trade and e-commerce analytics to forecast regional stock demand."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 62,
+      "fit": 28,
+      "intent": 18,
+      "reachability": 16,
+      "tier": "warm",
+      "reasons": [
+        "High retail distribution footprint across India",
+        "Primary focus is on demand forecasting rather than document intelligence"
+      ],
+      "whyNow": "Ongoing expansion in digital retail execution.",
+      "pitchAngle": "Provide conversational analytics over store-level retail POS data and distributor invoices.",
+      "recommendedProduct": "Cerelabs Conversational Analytics",
+      "estimatedSize": "1001-5000",
+      "industry": "FMCG",
+      "location": "Mumbai, India",
+      "risks": ["FMCG priorities skew toward supply chain ERP over LLM tools"]
+    },
+    "outreach": {
+      "subject": "Conversational sales analytics for Tata Consumer retail distribution",
+      "email": "Hi Tata Consumer Digital Team,\n\nAllowing regional sales heads to query distributor sell-through data and modern trade stock levels using plain English accelerates frontline response.\n\nCerelabs builds natural-language-to-SQL conversational engines for FMCG sales dashboards.\n\nWould you like to see a short demonstration?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Saw Tata Consumer's retail execution push. We build conversational AI for sales teams to query distributor data in plain English. Let's connect!"
+    }
+  },
+  {
+    "name": "Manipal Hospitals",
+    "website": "https://manipalhospitals.com",
+    "domain": "manipalhospitals.com",
+    "description": "One of India's foremost multi-specialty healthcare providers operating 33 hospitals in 17 cities.",
+    "industry": "Healthcare",
+    "estimatedSize": "5000+",
+    "location": "Bengaluru, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://manipalhospitals.com/news/ai-patient-records",
+          "title": "Manipal Hospitals launches digital health records consolidation",
+          "publishDate": "2026-01-14",
+          "excerpts": [
+            "Integrating historical patient records across newly acquired hospital networks to provide unified clinical summaries."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 84,
+      "fit": 36,
+      "intent": 25,
+      "reachability": 23,
+      "tier": "hot",
+      "reasons": [
+        "Hospital acquisitions created fragmented patient record archives across 33 facilities",
+        "Direct need to synthesize multi-hospital patient histories into unified summaries"
+      ],
+      "whyNow": "Active consolidation of medical records following recent hospital acquisitions.",
+      "pitchAngle": "Synthesize disparate legacy medical records into instant longitudinal patient summaries with Cerelabs healthcare RAG.",
+      "recommendedProduct": "Cerelabs Healthcare Document AI",
+      "estimatedSize": "5000+",
+      "industry": "Healthcare",
+      "location": "Bengaluru, India",
+      "risks": ["Legacy format variances across acquired hospitals"]
+    },
+    "outreach": {
+      "subject": "Unifying patient summaries across Manipal's 33 hospitals",
+      "email": "Hi Manipal Clinical IT Team,\n\nSynthesizing fragmented legacy records from newly acquired hospital networks during patient admissions creates severe clinical friction.\n\nCerelabs builds medical RAG pipelines that index disparate discharge summaries and lab histories to generate a verified, 1-page longitudinal patient brief in seconds.\n\nCould we demo this capability for your chief medical officer?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Saw Manipal's expansion across 33 hospitals. We build clinical AI that synthesizes fragmented patient history into 1-page summaries. Let's connect!"
+    }
+  },
+  {
+    "name": "Pidilite Industries",
+    "website": "https://pidilite.com",
+    "domain": "pidilite.com",
+    "description": "Leading manufacturer of adhesives, sealants, construction chemicals, and industrial resins (makers of Fevicol).",
+    "industry": "Chemicals & Adhesives",
+    "estimatedSize": "5000+",
+    "location": "Mumbai, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://pidilite.com/innovation/sustainable-adhesives",
+          "title": "Pidilite R&D accelerates chemical patent review and formulations",
+          "publishDate": "2025-11-04",
+          "excerpts": [
+            "Analyzing polymer chemistry formulation research and regulatory safety data sheets (SDS) globally."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 71,
+      "fit": 32,
+      "intent": 21,
+      "reachability": 18,
+      "tier": "hot",
+      "reasons": [
+        "Thousands of material safety data sheets (MSDS) and chemical compliance documents",
+        "Strong innovation lab exploring sustainable formulation patents"
+      ],
+      "whyNow": "Recent push into sustainable adhesive formulations and automated safety compliance.",
+      "pitchAngle": "Query chemical safety sheets and formulation patents in seconds with Cerelabs RAG.",
+      "recommendedProduct": "Cerelabs Document Intelligence",
+      "estimatedSize": "5000+",
+      "industry": "Chemicals & Adhesives",
+      "location": "Mumbai, India",
+      "risks": ["Chemical nomenclature parsing requires domain vocabulary"]
+    },
+    "outreach": {
+      "subject": "Automating Material Safety Data Sheet (MSDS) search at Pidilite",
+      "email": "Hi Pidilite R&D Team,\n\nManaging chemical compliance and safety data sheets across thousands of adhesive SKUs creates heavy compliance overhead.\n\nCerelabs provides specialized technical RAG that indexes chemical formulation datasheets and regulatory safety standards.\n\nWould you like to test our search speed on sample safety sheets?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Big fan of Pidilite's innovation. We build AI that indexes complex chemical formulation and safety sheets conversationally. Would love to connect!"
+    }
+  },
+  {
+    "name": "TVS Motor Company",
+    "website": "https://tvsmotor.com",
+    "domain": "tvsmotor.com",
+    "description": "Third largest 2-wheeler manufacturer in India and leading exporter to over 80 countries.",
+    "industry": "Manufacturing & Automotive",
+    "estimatedSize": "5000+",
+    "location": "Hosur, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://tvsmotor.com/ev-initiatives/digital-connect",
+          "title": "TVS Motor scales EV connected telemetry and dealership support",
+          "publishDate": "2026-02-10",
+          "excerpts": [
+            "Expanding dealership service network support with AI troubleshooting for electric 2-wheeler battery and electronics issues."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 81,
+      "fit": 34,
+      "intent": 25,
+      "reachability": 22,
+      "tier": "hot",
+      "reasons": [
+        "Rapid EV expansion requiring new technician training on battery and electronic diagnostics",
+        "High dealer network scale across 80+ export markets"
+      ],
+      "whyNow": "Active rollout of EV technician diagnostic support across service dealerships.",
+      "pitchAngle": "Equip dealership technicians with conversational EV electrical and battery diagnostic RAG.",
+      "recommendedProduct": "Cerelabs Multimodal Diagnostic RAG",
+      "estimatedSize": "5000+",
+      "industry": "Manufacturing & Automotive",
+      "location": "Hosur, India",
+      "risks": ["Multi-language requirement across international export distributors"]
+    },
+    "outreach": {
+      "subject": "Accelerating TVS EV battery diagnostics across dealership networks",
+      "email": "Hi TVS Motor Service Innovation Team,\n\nAs electric vehicle adoption surges, dealership technicians face completely new battery and electrical diagnostic challenges.\n\nCerelabs builds interactive diagnostic copilots that let service engineers query wiring diagrams and trouble codes conversationally.\n\nCould we demonstrate our EV diagnostic assistant on sample TVS iQube manuals?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Excited by TVS Motor's EV journey. We build conversational diagnostic tools that help dealership technicians troubleshoot EV electronics fast. Let's connect!"
+    }
+  },
+  {
+    "name": "Kotak Mahindra Bank",
+    "website": "https://kotak.com",
+    "domain": "kotak.com",
+    "description": "Leading Indian commercial bank offering retail banking, commercial finance, investment banking, and insurance services.",
+    "industry": "BFSI",
+    "estimatedSize": "5000+",
+    "location": "Mumbai, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://kotak.com/news/corporate-banking-ai",
+          "title": "Kotak launches corporate trade finance digital assistant",
+          "publishDate": "2026-01-22",
+          "excerpts": [
+            "Processing letters of credit, bank guarantees, and cross-border trade documents with automated discrepancy checks."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 90,
+      "fit": 38,
+      "intent": 27,
+      "reachability": 25,
+      "tier": "hot",
+      "reasons": [
+        "Complex cross-border letters of credit and trade finance documentation",
+        "High fraud risk and strict international trade rule (UCP 600) compliance",
+        "Active digital trade finance initiative"
+      ],
+      "whyNow": "Launched corporate trade finance digital assistant initiative in January 2026.",
+      "pitchAngle": "Deploy Cerelabs trade finance document AI for automated discrepancy checking in Letters of Credit and Bills of Lading.",
+      "recommendedProduct": "Cerelabs Trade Finance Document Intelligence",
+      "estimatedSize": "5000+",
+      "industry": "BFSI",
+      "location": "Mumbai, India",
+      "risks": ["Stringent banking audit and regulatory compliance"]
+    },
+    "outreach": {
+      "subject": "Automating Letter of Credit discrepancy checking for Kotak Trade Finance",
+      "email": "Hi Kotak Trade Finance Operations Team,\n\nManual verification of shipping documents against Letters of Credit under UCP 600 guidelines is time-intensive and susceptible to costly oversight.\n\nCerelabs builds specialized trade document intelligence models that cross-check bills of lading, commercial invoices, and inspection certificates against LC terms in under 3 minutes.\n\nWould you be open to an interactive demonstration on sample redacted LC sets?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Saw Kotak's focus on digital trade finance. We specialize in automated Letter of Credit discrepancy checking using multimodal AI. Let's connect!"
+    }
+  },
+  {
+    "name": "Torrent Pharmaceuticals",
+    "website": "https://torrentpharma.com",
+    "domain": "torrentpharma.com",
+    "description": "Leading Indian pharmaceutical company prominent in therapeutic segments of cardiovascular, CNS, gastrointestinal, and diabetology.",
+    "industry": "Pharmaceuticals",
+    "estimatedSize": "5000+",
+    "location": "Ahmedabad, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://torrentpharma.com/quality/audit-readiness",
+          "title": "Torrent Pharma accelerates manufacturing quality audit readiness",
+          "publishDate": "2025-11-15",
+          "excerpts": [
+            "Digitizing standard operating procedures and deviation reports across formulation plants."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 79,
+      "fit": 35,
+      "intent": 23,
+      "reachability": 21,
+      "tier": "hot",
+      "reasons": [
+        "Strict FDA and international audit compliance requirements",
+        "Thousands of SOPs across multiple manufacturing units in Gujarat and Sikkim"
+      ],
+      "whyNow": "Undergoing active audit readiness and deviation digitization.",
+      "pitchAngle": "Allow plant QA managers to query SOPs and deviation records with verifiable citations.",
+      "recommendedProduct": "Cerelabs Pharma RAG & Document Intelligence",
+      "estimatedSize": "5000+",
+      "industry": "Pharmaceuticals",
+      "location": "Ahmedabad, India",
+      "risks": ["Validation under 21 CFR Part 11 required"]
+    },
+    "outreach": {
+      "subject": "Instant SOP & deviation record queries for Torrent Pharma QA",
+      "email": "Hi Torrent Pharma Quality Assurance Team,\n\nPreparing for regulatory audits and investigating batch deviations across manufacturing units requires hours of cross-referencing SOP binders.\n\nCerelabs builds validated, CFR Part 11-compliant RAG engines that return exact SOP passages and deviation histories instantly.\n\nCould we share a 15-minute walkthrough of our QA search portal?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Noticed Torrent Pharma's focus on audit readiness. We build validated RAG systems that let QA teams query SOPs and deviation reports instantly. Let's connect!"
+    }
+  },
+  {
+    "name": "IndusInd Bank",
+    "website": "https://indusind.com",
+    "domain": "indusind.com",
+    "description": "Universal bank serving consumer, commercial, and vehicle finance sectors across India.",
+    "industry": "BFSI",
+    "estimatedSize": "5000+",
+    "location": "Mumbai, India",
+    "enrichment": {
+      "results": [
+        {
+          "url": "https://indusind.com/tech/vehicle-finance-ai",
+          "title": "IndusInd Bank automates vehicle finance document verification",
+          "publishDate": "2025-12-20",
+          "excerpts": [
+            "Verifying vehicle registration certificates (RC), insurance policies, and dealer invoices via computer vision."
+          ]
+        }
+      ]
+    },
+    "score": {
+      "total": 77,
+      "fit": 34,
+      "intent": 23,
+      "reachability": 20,
+      "tier": "hot",
+      "reasons": [
+        "Major player in Indian commercial vehicle and two-wheeler finance",
+        "Heavy paper processing load for RC books, insurance, and tax tokens"
+      ],
+      "whyNow": "Upgrading automated document verification for commercial vehicle finance.",
+      "pitchAngle": "Automate vehicle RC book, insurance, and permit extraction with Cerelabs Computer Vision.",
+      "recommendedProduct": "Cerelabs Vehicle Finance Document AI",
+      "estimatedSize": "5000+",
+      "industry": "BFSI",
+      "location": "Mumbai, India",
+      "risks": ["Regional vehicle authority document formatting variations"]
+    },
+    "outreach": {
+      "subject": "Automating vehicle RC & insurance verification for IndusInd Finance",
+      "email": "Hi IndusInd Vehicle Finance Operations,\n\nExtracting engine numbers, chassis details, and hypothecation data from state RC books and insurance binders slows down loan disbursement.\n\nCerelabs computer vision models extract vehicle registration and permit details across all Indian state formats with 99.2% accuracy.\n\nCan we show your underwriting team a live extraction test on 10 sample RC copies?\n\nBest,\nCerelabs Team",
+      "linkedinNote": "Hi! Saw IndusInd's focus on vehicle loan automation. We build computer vision that extracts data from Indian RC books and insurance policies in seconds. Let's connect!"
+    }
+  }
+]
