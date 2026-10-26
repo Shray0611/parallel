@@ -12,7 +12,7 @@ export function hashKey(provider: string, body: any): string {
 }
 
 export async function cached<T>(
-  provider: "groq" | "parallel_entity" | "parallel_search",
+  provider: "gemini" | "groq" | "parallel_entity" | "parallel_search",
   body: any,
   fn: () => Promise<T>
 ): Promise<T> {

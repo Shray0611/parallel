@@ -15,7 +15,8 @@ export interface ICampaignStats {
   warm: number;
   cold: number;
   apiCalls: {
-    groq: number;
+    gemini?: number;
+    groq?: number;
     parallelEntity: number;
     parallelSearch: number;
   };
@@ -107,6 +108,7 @@ const campaignSchema = new Schema<ICampaign>(
       warm: { type: Number, default: 0 },
       cold: { type: Number, default: 0 },
       apiCalls: {
+        gemini: { type: Number, default: 0 },
         groq: { type: Number, default: 0 },
         parallelEntity: { type: Number, default: 0 },
         parallelSearch: { type: Number, default: 0 }

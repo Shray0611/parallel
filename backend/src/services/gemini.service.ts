@@ -1,14 +1,23 @@
-import Groq from "groq-sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 import { env } from "../config/env.js";
 import { logger } from "../config/logger.js";
 import { cached } from "../utils/cache.js";
 
-const groq = new Groq({
-  apiKey: env.GROQ_API_KEY || "dummy_key_for_initialization"
-});
+const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY || "dummy_key_for_initialization");
 
-// Zod schemas for Groq outputs
+// Helper to strip markdown code blocks if present
+function extractJson(text: string): string {
+  let cleaned = text.trim();
+  if (cleaned.startsWith("```json")) {
+    cleaned = cleaned.replace(/^```json\s*/i, "").replace(/\s*```$/i, "");
+  } else if (cleaned.startsWith("```")) {
+    cleaned = cleaned.replace(/^```\s*/, "").replace(/\s*```$/, "");
+  }
+  return cleaned.trim();
+}
+
+// Zod schemas for Gemini outputs
 export const icpOutputSchema = z.object({
   icp: z.object({
     summary: z.string(),
@@ -66,46 +75,46 @@ export type LeadQueryOutput = z.infer<typeof leadQueryOutputSchema>;
 export type ScoreOutput = z.infer<typeof scoreOutputSchema>;
 export type OutreachOnlyOutput = z.infer<typeof outreachOnlySchema>;
 
-// Helper for calling Groq with JSON mode, retry, and Zod validation
-async function callGroqJson<T>(
+// Helper for calling Gemini with JSON mode, fallback models, retry, and Zod validation
+async function callGeminiJson<T>(
   systemPrompt: string,
   userPrompt: string,
   schema: z.ZodSchema<T>,
   temperature: number = 0.2
 ): Promise<T> {
   const modelsToTry = [
-    env.GROQ_MODEL,
-    "llama-3.1-70b-versatile",
-    "llama-3.1-8b-instant",
-    "llama3-70b-8192"
+    ...new Set([
+      env.GEMINI_MODEL,
+      "gemini-3.8-flash",
+      "gemini-3.6-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-flash-lite-latest",
+      "gemini-3.7-flash",
+      "gemini-3.5-flash"
+    ])
   ].filter(Boolean);
 
   let lastError: any = null;
 
-  for (const model of modelsToTry) {
+  for (const modelName of modelsToTry) {
     async function executeCall(temp: number): Promise<T> {
-      const completion = await groq.chat.completions.create({
-        model,
-        temperature: temp,
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content: `${systemPrompt}\nYou MUST return a valid JSON object matching the requested schema. Do not include markdown codeblocks or preamble.`
-          },
-          {
-            role: "user",
-            content: userPrompt
-          }
-        ]
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        systemInstruction: `${systemPrompt}\nYou MUST return a valid JSON object matching the requested schema. Do not include markdown codeblocks or preamble.`,
+        generationConfig: {
+          responseMimeType: "application/json",
+          temperature: temp
+        }
       });
 
-      const raw = completion.choices[0]?.message?.content;
-      if (!raw) {
-        throw new Error("Empty response received from Groq");
+      const response = await model.generateContent(userPrompt);
+      const rawText = response.response.text();
+      if (!rawText) {
+        throw new Error("Empty response received from Gemini");
       }
 
-      const parsed = JSON.parse(raw);
+      const cleaned = extractJson(rawText);
+      const parsed = JSON.parse(cleaned);
       return schema.parse(parsed);
     }
 
@@ -113,56 +122,53 @@ async function callGroqJson<T>(
       try {
         return await executeCall(temperature);
       } catch (err: any) {
-        if (err?.status === 404 || err?.message?.includes("model_not_found")) {
-          throw err; // Try next model immediately
+        const msg = err?.message || String(err);
+        if (msg.includes("503") || msg.includes("high demand") || msg.includes("404") || msg.includes("no longer available")) {
+          throw err;
         }
-        logger.warn({ err }, "Groq JSON parse or validation failed on first attempt; retrying with temperature 0");
+        logger.warn({ err: err?.message || err, model: modelName }, "Gemini call failed on first attempt; retrying with temperature 0");
         return await executeCall(0);
       }
     } catch (err: any) {
       lastError = err;
-      if (err?.status === 404 || err?.message?.includes("model_not_found")) {
-        logger.warn({ model }, "Groq model not found or unavailable, falling back to alternative model");
-        continue;
-      }
-      throw err;
+      logger.warn({ err: err?.message || err, model: modelName }, "Gemini model attempt failed, falling back to alternative model");
+      continue;
     }
   }
 
-  throw lastError || new Error("All Groq model attempts failed");
+  throw lastError || new Error("All Gemini model attempts failed");
 }
 
-export class GroqService {
+export class GeminiService {
   // Test connection
   static async ping(): Promise<boolean> {
-    if (!env.GROQ_API_KEY) return false;
+    if (!env.GEMINI_API_KEY || env.GEMINI_API_KEY.trim().length === 0) return false;
     const modelsToTry = [
-      env.GROQ_MODEL,
-      "llama-3.1-70b-versatile",
-      "llama-3.1-8b-instant",
-      "llama3-70b-8192"
+      ...new Set([
+        env.GEMINI_MODEL,
+        "gemini-3.8-flash",
+        "gemini-3.6-flash",
+        "gemini-3.5-flash-lite",
+        "gemini-flash-lite-latest"
+      ])
     ].filter(Boolean);
 
-    for (const model of modelsToTry) {
+    for (const modelName of modelsToTry) {
       try {
-        const res = await groq.chat.completions.create({
-          model,
-          temperature: 0,
-          max_tokens: 10,
-          response_format: { type: "json_object" },
-          messages: [
-            { role: "system", content: "Return JSON { \"status\": \"ok\" }" },
-            { role: "user", content: "ping" }
-          ]
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0
+          }
         });
-        const parsed = JSON.parse(res.choices[0]?.message?.content || "{}");
+        const res = await model.generateContent('Return JSON: { "status": "ok" }');
+        const text = extractJson(res.response.text() || "{}");
+        const parsed = JSON.parse(text);
         if (parsed.status === "ok") return true;
       } catch (err: any) {
-        if (err?.status === 404 || err?.message?.includes("model_not_found")) {
-          continue;
-        }
-        logger.warn({ err }, "Groq ping failed");
-        return false;
+        logger.warn({ err: err?.message || err, model: modelName }, "Gemini ping failed on model");
+        continue;
       }
     }
     return false;
@@ -181,7 +187,7 @@ export class GroqService {
   ): Promise<IcpOutput> {
     const cacheKey = { action: "generate_icp", offering, valueProps, filters };
 
-    return cached("groq", cacheKey, async () => {
+    return cached("gemini", cacheKey, async () => {
       const systemPrompt = `You are a B2B sales strategist for Cerelabs, an enterprise AI products company.
 You must output a JSON object with:
 1. "icp": {
@@ -208,7 +214,7 @@ Filters:
 - Target Company Size: ${filters.companySize} employees
 - Target Industry Domains: ${filters.domains.join(", ") || "General Enterprise"}`;
 
-      return await callGroqJson(systemPrompt, userPrompt, icpOutputSchema);
+      return await callGeminiJson(systemPrompt, userPrompt, icpOutputSchema);
     });
   }
 
@@ -218,9 +224,10 @@ Filters:
     description: string,
     offering: string
   ): Promise<LeadQueryOutput> {
-    const cacheKey = { action: "lead_queries", companyName, description, offering };
+    // Cache key includes companyName as primary unique identifier — two companies never share queries
+    const cacheKey = { action: "lead_queries", companyName, description: description?.slice(0, 100), offering };
 
-    return cached("groq", cacheKey, async () => {
+    return cached("gemini", cacheKey, async () => {
       const systemPrompt = `You are an AI research query generator for B2B lead enrichment.
 Generate search queries to enrich a target company using live web data.
 You must output a JSON object with:
@@ -242,7 +249,7 @@ RULES for search_queries:
 Company Description: ${description}
 Cerelabs Product Offering: ${offering}`;
 
-      return await callGroqJson(systemPrompt, userPrompt, leadQueryOutputSchema);
+      return await callGeminiJson(systemPrompt, userPrompt, leadQueryOutputSchema);
     });
   }
 
@@ -257,7 +264,7 @@ Cerelabs Product Offering: ${offering}`;
     const combinedExcerpts = excerpts.slice(0, 10).join("\n---\n").slice(0, 5000);
     const cacheKey = { action: "score_lead", companyName, description, offering, excerpts: combinedExcerpts };
 
-    return cached("groq", cacheKey, async () => {
+    return cached("gemini", cacheKey, async () => {
       const systemPrompt = `You are an enterprise AI deal qualification director and outreach copywriter for Cerelabs.
 You evaluate companies against an Ideal Customer Profile (ICP) based on live web evidence, assign a 0-100 score, and write tailored outreach.
 
@@ -296,7 +303,7 @@ Product We Are Selling: ${offering}
 Live Web Evidence & Excerpts:
 ${combinedExcerpts || "No live excerpts available. Rely on company profile."}`;
 
-      return await callGroqJson(systemPrompt, userPrompt, scoreOutputSchema);
+      return await callGeminiJson(systemPrompt, userPrompt, scoreOutputSchema);
     });
   }
 
@@ -334,6 +341,6 @@ Why Now Signal: ${whyNow}
 Evidence:
 ${excerpts.slice(0, 3).join("\n")}`;
 
-    return await callGroqJson(systemPrompt, userPrompt, outreachOnlySchema);
+    return await callGeminiJson(systemPrompt, userPrompt, outreachOnlySchema);
   }
 }

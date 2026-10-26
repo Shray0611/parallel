@@ -46,7 +46,7 @@ export class ParallelService {
         body: JSON.stringify({
           entity_type: "companies",
           objective: "technology companies in India",
-          match_limit: 1
+          match_limit: 5
         })
       });
       return res.status >= 200 && res.status < 300;
@@ -94,7 +94,7 @@ export class ParallelService {
     });
   }
 
-  // 2. Search API: Enrich single company
+  // 2. Search API: Enrich single company (NOT cached — each company gets unique live results)
   static async enrichCompany(
     objective: string,
     searchQueries: string[],
@@ -123,31 +123,38 @@ export class ParallelService {
       }
     };
 
-    return cached("parallel_search", body, async () => {
-      logger.info({ objective, queriesCount: sanitizedQueries.length, location }, "Executing Parallel Search Enrichment");
+    logger.info(
+      { objective: objective.slice(0, 80), queriesCount: sanitizedQueries.length, location, sessionId },
+      "Executing Parallel Search Enrichment"
+    );
 
-      const response = await fetch(this.BASE_URL_SEARCH, {
-        method: "POST",
-        headers: {
-          "x-api-key": env.PARALLEL_API_KEY,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
-      });
-
-      if (!response.ok) {
-        const errorData: any = await response.json().catch(() => ({}));
-        const message = errorData?.error?.message || `Parallel Search failed with status ${response.status}`;
-        logger.error({ status: response.status, errorData }, message);
-        throw new Error(message);
-      }
-
-      const data = (await response.json()) as ParallelSearchResponse;
-      return {
-        search_id: data.search_id || "",
-        results: data.results || [],
-        session_id: data.session_id || sessionId
-      };
+    const response = await fetch(this.BASE_URL_SEARCH, {
+      method: "POST",
+      headers: {
+        "x-api-key": env.PARALLEL_API_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
     });
+
+    if (!response.ok) {
+      const errorData: any = await response.json().catch(() => ({}));
+      const message =
+        errorData?.error?.message ||
+        `Parallel Search failed with status ${response.status}`;
+      logger.error({ status: response.status, errorData, objective: objective.slice(0, 80) }, message);
+      throw new Error(message);
+    }
+
+    const data = (await response.json()) as ParallelSearchResponse;
+    logger.info(
+      { resultsCount: data.results?.length || 0, searchId: data.search_id },
+      "Parallel Search enrichment complete"
+    );
+    return {
+      search_id: data.search_id || "",
+      results: data.results || [],
+      session_id: data.session_id || sessionId
+    };
   }
 }

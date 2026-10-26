@@ -11,11 +11,12 @@
     "seed": "tsx src/demo/seed.ts"
   },
   "dependencies": {
+    "@google/genai": "^2.31.0",
+    "@google/generative-ai": "^0.24.1",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "groq-sdk": "^0.15.0",
     "iconv-lite": "^0.7.3",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.10.0",

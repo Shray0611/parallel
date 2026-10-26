@@ -3,7 +3,7 @@ import { z } from "zod";
 import { Lead } from "../models/Lead.js";
 import { Campaign } from "../models/Campaign.js";
 import { requireAuth } from "../middleware/auth.js";
-import { GroqService } from "../services/groq.service.js";
+import { GeminiService } from "../services/gemini.service.js";
 import { isDbConnected } from "../config/db.js";
 import { inMemoryLeads } from "../pipeline/runCampaign.js";
 
@@ -142,7 +142,7 @@ leadRouter.post("/:id/regenerate-outreach", requireAuth, async (req: Request, re
   const excerpts = (lead.enrichment?.results || []).flatMap((r: any) => r.excerpts || []);
 
   try {
-    const newOutreach = await GroqService.regenerateOutreach(
+    const newOutreach = await GeminiService.regenerateOutreach(
       lead.name,
       lead.description,
       lead.score?.pitchAngle || "Accelerate document intelligence workflows",

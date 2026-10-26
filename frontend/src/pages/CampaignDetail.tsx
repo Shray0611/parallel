@@ -25,7 +25,8 @@ import {
   Activity,
   Layers,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +54,9 @@ export default function CampaignDetail() {
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [notesText, setNotesText] = useState("");
 
+  // View Mode: Table or Kanban
+  const [viewMode, setViewMode] = useState<"table" | "kanban">("table");
+
   // Initial Load
   const fetchCampaign = async () => {
     try {
@@ -71,6 +75,19 @@ export default function CampaignDetail() {
     } catch (err: any) {
       toast.error(err.message || "Failed to load leads");
       setIsLoading(false);
+    }
+  };
+
+  // Open lead details — fetch fresh data from server to ensure score/enrichment is up-to-date
+  const openLeadDetail = async (lead: Lead) => {
+    setSelectedLead(lead); // Show immediately with current data
+    const leadId = lead._id || lead.id;
+    if (!leadId) return;
+    try {
+      const res = await apiRequest<{ lead: Lead }>(`/leads/${leadId}`);
+      setSelectedLead(res.lead);
+    } catch {
+      // Keep showing the in-memory lead if fetch fails
     }
   };
 
@@ -547,155 +564,288 @@ export default function CampaignDetail() {
             <option value="score_asc">Lowest Score</option>
             <option value="name">Company Name</option>
           </select>
+
+          {/* View Toggle */}
+          <div className="flex items-center rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-800 dark:bg-slate-800 ml-2">
+            <button
+              type="button"
+              onClick={() => setViewMode("table")}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${
+                viewMode === "table"
+                  ? "bg-white text-blue-600 shadow-xs dark:bg-slate-900 dark:text-blue-400"
+                  : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
+              }`}
+            >
+              Table
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("kanban")}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${
+                viewMode === "kanban"
+                  ? "bg-white text-blue-600 shadow-xs dark:bg-slate-900 dark:text-blue-400"
+                  : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
+              }`}
+            >
+              Kanban
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Leads Table */}
-      <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-xs text-slate-500 uppercase tracking-wider font-semibold">
-              <tr>
-                <th className="px-6 py-3">Company</th>
-                <th className="px-4 py-3">Industry / Size</th>
-                <th className="px-4 py-3">Score</th>
-                <th className="px-4 py-3">Why Now Signal</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
-              {isLoading ? (
+      {/* VIEW: Table Mode */}
+      {viewMode === "table" ? (
+        <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-xs text-slate-500 uppercase tracking-wider font-semibold">
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-500">
-                    <Clock className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-600" />
-                    Loading leads...
-                  </td>
+                  <th className="px-6 py-3">Company</th>
+                  <th className="px-4 py-3">Industry / Size</th>
+                  <th className="px-4 py-3">Score</th>
+                  <th className="px-4 py-3">Why Now Signal</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Action</th>
                 </tr>
-              ) : filteredLeads.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-500">
-                    No leads match your active filters.
-                  </td>
-                </tr>
-              ) : (
-                filteredLeads.map((lead) => {
-                  const leadId = lead._id || lead.id || "";
-                  const totalScore = lead.score?.total || 0;
-                  const tier = lead.score?.tier || (totalScore >= 70 ? "hot" : totalScore >= 45 ? "warm" : "cold");
+              </thead>
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-12 text-slate-500">
+                      <Clock className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-600" />
+                      Loading leads...
+                    </td>
+                  </tr>
+                ) : filteredLeads.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-12 text-slate-500">
+                      No leads match your active filters.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredLeads.map((lead) => {
+                    const leadId = lead._id || lead.id || "";
+                    const totalScore = lead.score?.total || 0;
+                    const tier = lead.score?.tier || (totalScore >= 70 ? "hot" : totalScore >= 45 ? "warm" : "cold");
 
-                  return (
-                    <tr
-                      key={leadId}
-                      className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
-                      onClick={() => setSelectedLead(lead)}
-                    >
-                      {/* Company Name & Favicon */}
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={`https://www.google.com/s2/favicons?domain=${lead.domain}&sz=32`}
-                            alt=""
-                            className="h-6 w-6 rounded bg-slate-100 dark:bg-slate-800 p-0.5 object-contain flex-shrink-0"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src =
-                                "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8'><rect width='16' height='16' rx='4'/></svg>";
-                            }}
-                          />
-                          <div>
-                            <div className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                              {lead.name}
-                              {lead.website && (
-                                <a
-                                  href={lead.website.startsWith("http") ? lead.website : `https://${lead.website}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="text-slate-400 hover:text-blue-600 inline-block"
-                                >
-                                  <ExternalLink className="h-3 w-3" />
-                                </a>
-                              )}
+                    return (
+                      <tr
+                        key={leadId}
+                        className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                        onClick={() => openLeadDetail(lead)}
+                      >
+                        {/* Company Name & Favicon */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={`https://www.google.com/s2/favicons?domain=${lead.domain}&sz=32`}
+                              alt=""
+                              className="h-6 w-6 rounded bg-slate-100 dark:bg-slate-800 p-0.5 object-contain flex-shrink-0"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src =
+                                  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8'><rect width='16' height='16' rx='4'/></svg>";
+                              }}
+                            />
+                            <div>
+                              <div className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                                {lead.name}
+                                {lead.website && (
+                                  <a
+                                    href={lead.website.startsWith("http") ? lead.website : `https://${lead.website}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-slate-400 hover:text-blue-600 inline-block"
+                                  >
+                                    <ExternalLink className="h-3 w-3" />
+                                  </a>
+                                )}
+                              </div>
+                              <span className="text-xs text-slate-400">{lead.domain}</span>
                             </div>
-                            <span className="text-xs text-slate-400">{lead.domain}</span>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      {/* Industry & Size */}
-                      <td className="px-4 py-4 text-xs">
-                        <div className="font-medium text-slate-800 dark:text-slate-200">
-                          {lead.score?.industry || "Enterprise"}
-                        </div>
-                        <div className="text-slate-400 mt-0.5">
-                          {lead.score?.estimatedSize || campaign?.filters?.companySize || "Mid-Market"} •{" "}
-                          {lead.score?.location || campaign?.filters?.country}
-                        </div>
-                      </td>
+                        {/* Industry & Size */}
+                        <td className="px-4 py-4 text-xs">
+                          <div className="font-medium text-slate-800 dark:text-slate-200">
+                            {lead.score?.industry || "Enterprise"}
+                          </div>
+                          <div className="text-slate-400 mt-0.5">
+                            {lead.score?.estimatedSize || campaign?.filters?.companySize || "Mid-Market"} •{" "}
+                            {lead.score?.location || campaign?.filters?.country}
+                          </div>
+                        </td>
 
-                      {/* Score Pill */}
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white ${
-                              tier === "hot"
-                                ? "bg-red-600"
-                                : tier === "warm"
-                                ? "bg-amber-500"
-                                : "bg-slate-500"
-                            }`}
+                        {/* Score Pill */}
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white ${
+                                tier === "hot"
+                                  ? "bg-red-600"
+                                  : tier === "warm"
+                                  ? "bg-amber-500"
+                                  : "bg-slate-500"
+                              }`}
+                            >
+                              {totalScore}
+                            </div>
+                            <Badge variant={tier as any} className="capitalize text-[11px]">
+                              {tier}
+                            </Badge>
+                          </div>
+                        </td>
+
+                        {/* Why Now */}
+                        <td className="px-4 py-4 text-xs text-slate-600 dark:text-slate-300 max-w-xs line-clamp-2">
+                          {lead.score?.whyNow || lead.description || "Active enterprise modernization"}
+                        </td>
+
+                        {/* Status */}
+                        <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
+                          <select
+                            value={lead.status}
+                            onChange={(e) => handleStatusChange(leadId, e.target.value as any)}
+                            className="h-7 rounded border border-slate-200 bg-white px-2 text-xs font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-600 dark:border-slate-800 dark:bg-slate-900"
                           >
-                            {totalScore}
+                            <option value="new">New</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="replied">Replied</option>
+                            <option value="qualified">Qualified</option>
+                            <option value="lost">Lost</option>
+                          </select>
+                        </td>
+
+                        {/* Action */}
+                        <td className="px-4 py-4 text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openLeadDetail(lead);
+                            }}
+                            className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                          >
+                            Details
+                            <ChevronRight className="h-3 w-3 ml-1" />
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      ) : (
+        /* VIEW: Kanban Board Mode */
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 overflow-x-auto pb-4">
+          {(
+            [
+              { status: "new", title: "New", color: "bg-slate-500", border: "border-slate-200 dark:border-slate-800" },
+              { status: "contacted", title: "Contacted", color: "bg-blue-600", border: "border-blue-200 dark:border-blue-900" },
+              { status: "replied", title: "Replied", color: "bg-indigo-600", border: "border-indigo-200 dark:border-indigo-900" },
+              { status: "qualified", title: "Qualified", color: "bg-emerald-600", border: "border-emerald-200 dark:border-emerald-900" },
+              { status: "lost", title: "Lost", color: "bg-rose-600", border: "border-rose-200 dark:border-rose-900" }
+            ] as const
+          ).map((col) => {
+            const colLeads = filteredLeads.filter((l) => (l.status || "new") === col.status);
+            return (
+              <div
+                key={col.status}
+                className="flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 p-3 min-w-[220px]"
+              >
+                {/* Column Header */}
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className={`h-2.5 w-2.5 rounded-full ${col.color}`} />
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      {col.title}
+                    </span>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] h-5 py-0">
+                    {colLeads.length}
+                  </Badge>
+                </div>
+
+                {/* Column Cards */}
+                <div className="space-y-3 flex-1 overflow-y-auto max-h-[600px] pr-1">
+                  {colLeads.length === 0 ? (
+                    <div className="h-24 flex items-center justify-center text-xs text-slate-400 italic border border-dashed border-slate-200 dark:border-slate-800 rounded-lg">
+                      No leads
+                    </div>
+                  ) : (
+                    colLeads.map((lead) => {
+                      const leadId = lead._id || lead.id || "";
+                      const totalScore = lead.score?.total || 0;
+                      const tier = lead.score?.tier || (totalScore >= 70 ? "hot" : totalScore >= 45 ? "warm" : "cold");
+
+                      return (
+                        <div
+                          key={leadId}
+                          onClick={() => openLeadDetail(lead)}
+                          className="p-3 bg-white dark:bg-slate-850 rounded-lg border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-400 hover:shadow-sm transition-all cursor-pointer space-y-2.5"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <img
+                                src={`https://www.google.com/s2/favicons?domain=${lead.domain}&sz=32`}
+                                alt=""
+                                className="h-5 w-5 rounded p-0.5 bg-slate-100 dark:bg-slate-800 flex-shrink-0"
+                              />
+                              <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                                {lead.name}
+                              </h4>
+                            </div>
+                            <span
+                              className={`text-[10px] font-bold px-1.5 py-0.5 rounded text-white flex-shrink-0 ${
+                                tier === "hot"
+                                  ? "bg-red-600"
+                                  : tier === "warm"
+                                  ? "bg-amber-500"
+                                  : "bg-slate-500"
+                              }`}
+                            >
+                              {totalScore}
+                            </span>
                           </div>
-                          <Badge variant={tier as any} className="capitalize text-[11px]">
-                            {tier}
-                          </Badge>
+
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
+                            {lead.score?.whyNow || lead.description || "Active prospect"}
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[10px]">
+                            <span className="text-slate-400 font-medium truncate max-w-[100px]">
+                              {lead.score?.industry || "Enterprise"}
+                            </span>
+
+                            {/* Quick Status Mover */}
+                            <select
+                              value={lead.status}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => handleStatusChange(leadId, e.target.value as any)}
+                              className="h-6 rounded border border-slate-200 bg-slate-50 dark:bg-slate-800 px-1 text-[10px] font-medium"
+                            >
+                              <option value="new">Move: New</option>
+                              <option value="contacted">Move: Contacted</option>
+                              <option value="replied">Move: Replied</option>
+                              <option value="qualified">Move: Qualified</option>
+                              <option value="lost">Move: Lost</option>
+                            </select>
+                          </div>
                         </div>
-                      </td>
-
-                      {/* Why Now */}
-                      <td className="px-4 py-4 text-xs text-slate-600 dark:text-slate-300 max-w-xs line-clamp-2">
-                        {lead.score?.whyNow || lead.description || "Active enterprise modernization"}
-                      </td>
-
-                      {/* Status */}
-                      <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
-                        <select
-                          value={lead.status}
-                          onChange={(e) => handleStatusChange(leadId, e.target.value as any)}
-                          className="h-7 rounded border border-slate-200 bg-white px-2 text-xs font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-600 dark:border-slate-800 dark:bg-slate-900"
-                        >
-                          <option value="new">New</option>
-                          <option value="contacted">Contacted</option>
-                          <option value="replied">Replied</option>
-                          <option value="qualified">Qualified</option>
-                          <option value="lost">Lost</option>
-                        </select>
-                      </td>
-
-                      {/* Action */}
-                      <td className="px-4 py-4 text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedLead(lead);
-                          }}
-                          className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
-                        >
-                          Details
-                          <ChevronRight className="h-3 w-3 ml-1" />
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
-      </Card>
+      )}
 
       {/* Slide-over Lead Detail Drawer */}
       {selectedLead && (

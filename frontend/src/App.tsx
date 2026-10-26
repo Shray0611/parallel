@@ -8,6 +8,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import CampaignWizard from "./pages/CampaignWizard";
 import CampaignDetail from "./pages/CampaignDetail";
+import Settings from "./pages/Settings";
 
 export default function App() {
   const { checkAuth } = useAuthStore();
@@ -31,7 +32,7 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/campaigns/new" element={<CampaignWizard />} />
           <Route path="/campaigns/:id" element={<CampaignDetail />} />
-          <Route path="/settings" element={<div className="p-8">Settings Page (Phase 5)</div>} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
 
         {/* Catch-all redirect */}

@@ -282,7 +282,7 @@ export default function CampaignWizard() {
           <CardHeader>
             <CardTitle>Describe Your Product or Service</CardTitle>
             <CardDescription>
-              Our Groq engine will turn your offering into an Ideal Customer Profile (ICP) and targeted search queries.
+              Our Gemini AI engine will turn your offering into an Ideal Customer Profile (ICP) and targeted search queries.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">

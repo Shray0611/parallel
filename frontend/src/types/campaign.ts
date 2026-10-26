@@ -25,7 +25,8 @@ export interface CampaignStats {
   warm: number;
   cold: number;
   apiCalls: {
-    groq: number;
+    gemini?: number;
+    groq?: number;
     parallelEntity: number;
     parallelSearch: number;
   };
