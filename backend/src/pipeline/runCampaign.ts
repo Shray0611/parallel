@@ -323,20 +323,20 @@ async function runLivePipeline(campaign: any): Promise<void> {
   const campaignId = campaign._id.toString();
   const limit = pLimit(4); // Concurrency limit 4
 
-  // Stage 1: ICP & Search Objectives via Gemini
-  logger.info({ campaignId }, "Stage 1: Generating ICP and objectives via Gemini");
+  // Stage 1: ICP & Search Objectives via Groq (with Gemini fallback)
+  logger.info({ campaignId }, "Stage 1: Generating ICP and objectives via AI (Groq/Gemini)");
   campaign.progress = {
     stage: "icp",
     current: 1,
     total: 5,
-    message: "Generating strategic ICP and search objectives via Gemini..."
+    message: "Generating strategic ICP and search objectives..."
   };
   eventBus.emitProgress({
     campaignId,
     stage: "icp",
     current: 1,
     total: 5,
-    message: "Gemini is analyzing your product offering and market filters..."
+    message: "AI engine is analyzing your product offering and market filters..."
   });
 
   const icpOutput = await GeminiService.generateICP(
@@ -347,7 +347,11 @@ async function runLivePipeline(campaign: any): Promise<void> {
 
   campaign.icp = icpOutput.icp;
   campaign.searchObjectives = icpOutput.searchObjectives;
-  campaign.stats.apiCalls.gemini = (campaign.stats.apiCalls.gemini || 0) + 1;
+  if (GeminiService.getLastProvider() === "groq") {
+    campaign.stats.apiCalls.groq = (campaign.stats.apiCalls.groq || 0) + 1;
+  } else {
+    campaign.stats.apiCalls.gemini = (campaign.stats.apiCalls.gemini || 0) + 1;
+  }
   await campaign.save();
 
   // Stage 2: Discover Companies via Parallel Entity Search
@@ -449,9 +453,13 @@ async function runLivePipeline(campaign: any): Promise<void> {
   const enrichTasks = createdLeads.map((lead) =>
     limit(async () => {
       try {
-        // Gemini generates 3 queries + 1 objective for this specific company
+        // AI generates 3 queries + 1 objective for this specific company
         const queryGen = await GeminiService.generateLeadQueries(lead.name, lead.description, campaign.offering);
-        campaign.stats.apiCalls.gemini = (campaign.stats.apiCalls.gemini || 0) + 1;
+        if (GeminiService.getLastProvider() === "groq") {
+          campaign.stats.apiCalls.groq = (campaign.stats.apiCalls.groq || 0) + 1;
+        } else {
+          campaign.stats.apiCalls.gemini = (campaign.stats.apiCalls.gemini || 0) + 1;
+        }
 
         // Use a per-company unique session ID so Parallel tracks each company separately
         const companySessionId = `${campaign.sessionId || campaignId}-${lead.domain.replace(/\./g, "-")}`;
@@ -491,8 +499,8 @@ async function runLivePipeline(campaign: any): Promise<void> {
   await Promise.allSettled(enrichTasks);
   await campaign.save();
 
-  // Stage 4: Score each lead via Gemini
-  logger.info({ campaignId, count: createdLeads.length }, "Stage 4: Scoring leads via Gemini");
+  // Stage 4: Score each lead via Groq / Gemini
+  logger.info({ campaignId, count: createdLeads.length }, "Stage 4: Scoring leads via AI (Groq/Gemini)");
   campaign.progress = {
     stage: "score",
     current: 4,
@@ -522,7 +530,11 @@ async function runLivePipeline(campaign: any): Promise<void> {
           excerpts,
           campaign.offering
         );
-        campaign.stats.apiCalls.gemini = (campaign.stats.apiCalls.gemini || 0) + 1;
+        if (GeminiService.getLastProvider() === "groq") {
+          campaign.stats.apiCalls.groq = (campaign.stats.apiCalls.groq || 0) + 1;
+        } else {
+          campaign.stats.apiCalls.gemini = (campaign.stats.apiCalls.gemini || 0) + 1;
+        }
 
         lead.score = scored.score;
         lead.outreach = scored.outreach;

@@ -87,7 +87,7 @@ export default function Settings() {
       </div>
 
       {/* Service Health Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Database */}
         <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
           <CardHeader className="pb-3">
@@ -101,7 +101,7 @@ export default function Settings() {
           </CardHeader>
           <CardContent className="space-y-3 text-xs">
             <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
-              <span className="text-slate-600 dark:text-slate-400 font-medium">Connection State</span>
+              <span className="text-slate-600 dark:text-slate-400 font-medium">State</span>
               <div className="flex items-center gap-1.5 font-bold">
                 {health?.services?.database === "connected" ? (
                   <>
@@ -111,41 +111,41 @@ export default function Settings() {
                 ) : (
                   <>
                     <AlertTriangle className="h-4 w-4 text-amber-500" />
-                    <span className="text-amber-700 dark:text-amber-400">Offline (In-Memory Fallback Active)</span>
+                    <span className="text-amber-700 dark:text-amber-400">Offline (Fallback)</span>
                   </>
                 )}
               </div>
             </div>
             <p className="text-[11px] text-slate-400">
-              Persists Users, Campaigns, Leads, and 7-day ApiCache.
+              Users, Campaigns, Leads & ApiCache.
             </p>
           </CardContent>
         </Card>
 
-        {/* Google Gemini LLM */}
+        {/* Groq LLM (Primary) */}
         <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Reasoning Engine</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Primary Engine</span>
               <Cpu className="h-4 w-4 text-slate-400" />
             </div>
             <CardTitle className="text-lg flex items-center gap-2 mt-1">
-              Google Gemini 2.0 / 1.5 Flash
+              Groq (Fast LLM)
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-xs">
             <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
-              <span className="text-slate-600 dark:text-slate-400 font-medium">API Key & Model</span>
+              <span className="text-slate-600 dark:text-slate-400 font-medium">Groq Status</span>
               <div className="flex items-center gap-1.5 font-bold">
-                {(health?.services?.gemini || health?.services?.groq) === "ok" ? (
+                {health?.services?.groq === "ok" ? (
                   <>
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                     <span className="text-emerald-700 dark:text-emerald-400">Operational</span>
                   </>
-                ) : (health?.services?.gemini || health?.services?.groq) === "failed" ? (
+                ) : health?.services?.groq === "failed" ? (
                   <>
                     <AlertTriangle className="h-4 w-4 text-amber-500" />
-                    <span className="text-amber-700 dark:text-amber-400">Connection Failed</span>
+                    <span className="text-amber-700 dark:text-amber-400">Offline</span>
                   </>
                 ) : (
                   <>
@@ -156,7 +156,46 @@ export default function Settings() {
               </div>
             </div>
             <p className="text-[11px] text-slate-400">
-              Powers ICP generation, search query formulating, lead scoring 0-100, and personalized outreach drafts.
+              Primary LLM for ICP and scoring. Auto-switches to Gemini on error.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Google Gemini LLM (Fallback) */}
+        <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Fallback Engine</span>
+              <Cpu className="h-4 w-4 text-slate-400" />
+            </div>
+            <CardTitle className="text-lg flex items-center gap-2 mt-1">
+              Gemini 3.8 / 3.6
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-xs">
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+              <span className="text-slate-600 dark:text-slate-400 font-medium">Gemini Status</span>
+              <div className="flex items-center gap-1.5 font-bold">
+                {health?.services?.gemini === "ok" ? (
+                  <>
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <span className="text-emerald-700 dark:text-emerald-400">Operational</span>
+                  </>
+                ) : health?.services?.gemini === "failed" ? (
+                  <>
+                    <AlertTriangle className="h-4 w-4 text-amber-500" />
+                    <span className="text-amber-700 dark:text-amber-400">Offline</span>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="h-4 w-4 text-slate-400" />
+                    <span className="text-slate-500">Unconfigured</span>
+                  </>
+                )}
+              </div>
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Automated high-capacity fallback when Groq experiences errors.
             </p>
           </CardContent>
         </Card>

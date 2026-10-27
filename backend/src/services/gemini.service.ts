@@ -1,10 +1,18 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import { z } from "zod";
 import { env } from "../config/env.js";
 import { logger } from "../config/logger.js";
 import { cached } from "../utils/cache.js";
 
-const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY || "dummy_key_for_initialization");
+// Initialize clients
+const groq = new Groq({
+  apiKey: env.GROQ_API_KEY || "dummy_key_for_init"
+});
+
+const genAI = new GoogleGenerativeAI(
+  env.GEMINI_API_KEY || "dummy_key_for_init"
+);
 
 // Helper to strip markdown code blocks if present
 function extractJson(text: string): string {
@@ -17,7 +25,7 @@ function extractJson(text: string): string {
   return cleaned.trim();
 }
 
-// Zod schemas for Gemini outputs
+// Zod schemas
 export const icpOutputSchema = z.object({
   icp: z.object({
     summary: z.string(),
@@ -75,13 +83,77 @@ export type LeadQueryOutput = z.infer<typeof leadQueryOutputSchema>;
 export type ScoreOutput = z.infer<typeof scoreOutputSchema>;
 export type OutreachOnlyOutput = z.infer<typeof outreachOnlySchema>;
 
-// Helper for calling Gemini with JSON mode, fallback models, retry, and Zod validation
-async function callGeminiJson<T>(
+// Global tracker for which provider handled the latest request
+let lastUsedProvider: "groq" | "gemini" = "groq";
+
+// 1. Internal Groq caller
+async function callGroqJson<T>(
   systemPrompt: string,
   userPrompt: string,
   schema: z.ZodSchema<T>,
   temperature: number = 0.2
 ): Promise<T> {
+  if (!env.GROQ_API_KEY || env.GROQ_API_KEY.trim().length === 0) {
+    throw new Error("GROQ_API_KEY not configured");
+  }
+
+  const modelsToTry = [
+    ...new Set([
+      env.GROQ_MODEL,
+      "openai/gpt-oss-120b",
+      "openai/gpt-oss-20b",
+      "qwen/qwen3.8-27b",
+      "llama-3.3-70b-versatile"
+    ])
+  ].filter(Boolean);
+
+  let lastError: any = null;
+
+  for (const model of modelsToTry) {
+    try {
+      const completion = await groq.chat.completions.create({
+        model,
+        temperature,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `${systemPrompt}\nYou MUST return a valid JSON object matching the requested schema. Do not include markdown codeblocks or preamble.`
+          },
+          {
+            role: "user",
+            content: userPrompt
+          }
+        ]
+      });
+
+      const raw = completion.choices[0]?.message?.content;
+      if (!raw) throw new Error("Empty response received from Groq");
+
+      const cleaned = extractJson(raw);
+      const parsed = JSON.parse(cleaned);
+      return schema.parse(parsed);
+    } catch (err: any) {
+      lastError = err;
+      logger.warn({ model, err: err?.message || err }, "Groq model attempt failed, trying next Groq model");
+      continue;
+    }
+  }
+
+  throw lastError || new Error("All Groq models failed");
+}
+
+// 2. Internal Gemini caller
+async function callGeminiInternal<T>(
+  systemPrompt: string,
+  userPrompt: string,
+  schema: z.ZodSchema<T>,
+  temperature: number = 0.2
+): Promise<T> {
+  if (!env.GEMINI_API_KEY || env.GEMINI_API_KEY.trim().length === 0) {
+    throw new Error("GEMINI_API_KEY not configured");
+  }
+
   const modelsToTry = [
     ...new Set([
       env.GEMINI_MODEL,
@@ -109,9 +181,7 @@ async function callGeminiJson<T>(
 
       const response = await model.generateContent(userPrompt);
       const rawText = response.response.text();
-      if (!rawText) {
-        throw new Error("Empty response received from Gemini");
-      }
+      if (!rawText) throw new Error("Empty response received from Gemini");
 
       const cleaned = extractJson(rawText);
       const parsed = JSON.parse(cleaned);
@@ -139,9 +209,84 @@ async function callGeminiJson<T>(
   throw lastError || new Error("All Gemini model attempts failed");
 }
 
+// 3. Fallback Orchestrator: Try Groq first; if Groq fails, switch to Gemini
+async function callLLMWithFallback<T>(
+  systemPrompt: string,
+  userPrompt: string,
+  schema: z.ZodSchema<T>,
+  temperature: number = 0.2
+): Promise<T> {
+  // Step 1: Try Groq
+  if (env.GROQ_API_KEY && env.GROQ_API_KEY.trim().length > 0) {
+    try {
+      const groqRes = await callGroqJson(systemPrompt, userPrompt, schema, temperature);
+      lastUsedProvider = "groq";
+      logger.info("✅ Groq responded successfully with valid output");
+      return groqRes;
+    } catch (groqErr: any) {
+      logger.warn(
+        { err: groqErr?.message || groqErr },
+        "⚠️ Groq failed or gave error; switching to Gemini fallback"
+      );
+    }
+  }
+
+  // Step 2: Fallback to Gemini
+  try {
+    const geminiRes = await callGeminiInternal(systemPrompt, userPrompt, schema, temperature);
+    lastUsedProvider = "gemini";
+    logger.info("✅ Gemini responded successfully");
+    return geminiRes;
+  } catch (geminiErr: any) {
+    logger.error({ err: geminiErr?.message || geminiErr }, "❌ Both Groq and Gemini failed");
+    throw geminiErr;
+  }
+}
+
 export class GeminiService {
-  // Test connection
-  static async ping(): Promise<boolean> {
+  // Access which provider fulfilled the last request
+  static getLastProvider(): "groq" | "gemini" {
+    return lastUsedProvider;
+  }
+
+  // Test Groq connection specifically
+  static async pingGroq(): Promise<boolean> {
+    if (!env.GROQ_API_KEY || env.GROQ_API_KEY.trim().length === 0) return false;
+    const modelsToTry = [
+      ...new Set([
+        env.GROQ_MODEL,
+        "openai/gpt-oss-120b",
+        "openai/gpt-oss-20b",
+        "qwen/qwen3.8-27b",
+        "llama-3.3-70b-versatile"
+      ])
+    ].filter(Boolean);
+
+    for (const model of modelsToTry) {
+      try {
+        const res = await groq.chat.completions.create({
+          model,
+          temperature: 0,
+          max_tokens: 50,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: 'Return JSON: { "status": "ok" }' },
+            { role: "user", content: "ping" }
+          ]
+        });
+        const cleaned = extractJson(res.choices[0]?.message?.content || "{}");
+        const parsed = JSON.parse(cleaned);
+        if (parsed.status === "ok") return true;
+      } catch (err: any) {
+        logger.debug({ model, err: err?.message || err }, "Groq ping model attempt failed");
+        continue;
+      }
+    }
+    return false;
+  }
+
+  // Test Gemini connection specifically
+  static async pingGemini(): Promise<boolean> {
     if (!env.GEMINI_API_KEY || env.GEMINI_API_KEY.trim().length === 0) return false;
     const modelsToTry = [
       ...new Set([
@@ -167,11 +312,17 @@ export class GeminiService {
         const parsed = JSON.parse(text);
         if (parsed.status === "ok") return true;
       } catch (err: any) {
-        logger.warn({ err: err?.message || err, model: modelName }, "Gemini ping failed on model");
         continue;
       }
     }
     return false;
+  }
+
+  // General ping: returns true if either Groq or Gemini is active
+  static async ping(): Promise<boolean> {
+    const groqOk = await this.pingGroq();
+    if (groqOk) return true;
+    return await this.pingGemini();
   }
 
   // Stage 1: Generate ICP & Search Objectives
@@ -214,7 +365,7 @@ Filters:
 - Target Company Size: ${filters.companySize} employees
 - Target Industry Domains: ${filters.domains.join(", ") || "General Enterprise"}`;
 
-      return await callGeminiJson(systemPrompt, userPrompt, icpOutputSchema);
+      return await callLLMWithFallback(systemPrompt, userPrompt, icpOutputSchema);
     });
   }
 
@@ -224,7 +375,6 @@ Filters:
     description: string,
     offering: string
   ): Promise<LeadQueryOutput> {
-    // Cache key includes companyName as primary unique identifier — two companies never share queries
     const cacheKey = { action: "lead_queries", companyName, description: description?.slice(0, 100), offering };
 
     return cached("gemini", cacheKey, async () => {
@@ -249,7 +399,7 @@ RULES for search_queries:
 Company Description: ${description}
 Cerelabs Product Offering: ${offering}`;
 
-      return await callGeminiJson(systemPrompt, userPrompt, leadQueryOutputSchema);
+      return await callLLMWithFallback(systemPrompt, userPrompt, leadQueryOutputSchema);
     });
   }
 
@@ -303,7 +453,7 @@ Product We Are Selling: ${offering}
 Live Web Evidence & Excerpts:
 ${combinedExcerpts || "No live excerpts available. Rely on company profile."}`;
 
-      return await callGeminiJson(systemPrompt, userPrompt, scoreOutputSchema);
+      return await callLLMWithFallback(systemPrompt, userPrompt, scoreOutputSchema);
     });
   }
 
@@ -341,6 +491,10 @@ Why Now Signal: ${whyNow}
 Evidence:
 ${excerpts.slice(0, 3).join("\n")}`;
 
-    return await callGeminiJson(systemPrompt, userPrompt, outreachOnlySchema);
+    return await callLLMWithFallback(systemPrompt, userPrompt, outreachOnlySchema);
   }
 }
+
+// Aliases for compatibility
+export const GroqService = GeminiService;
+export const LLMService = GeminiService;
