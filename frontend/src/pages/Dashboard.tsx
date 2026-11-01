@@ -215,6 +215,7 @@ export default function Dashboard() {
                   <XAxis dataKey="range" stroke="#94a3b8" fontSize={11} tickLine={false} />
                   <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} allowDecimals={false} />
                   <Tooltip
+                    cursor={false}
                     contentStyle={{
                       backgroundColor: "#0f172a",
                       border: "none",
@@ -223,7 +224,7 @@ export default function Dashboard() {
                       fontSize: "12px"
                     }}
                   />
-                  <Bar dataKey="count" radius={[4, 4, 0, 0]} name="Leads">
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]} name="Leads" activeBar={false}>
                     {(summary?.scoreHistogram || []).map((entry, index) => (
                       <Cell key={entry.range} fill={SCORE_COLORS[index] || "#3b82f6"} />
                     ))}
@@ -271,6 +272,8 @@ export default function Dashboard() {
                       color: "#fff",
                       fontSize: "12px"
                     }}
+                    labelStyle={{ color: "#fff" }}
+                    itemStyle={{ color: "#fff" }}
                   />
                   <Legend verticalAlign="bottom" height={36} iconSize={8} wrapperStyle={{ fontSize: "11px" }} />
                 </PieChart>

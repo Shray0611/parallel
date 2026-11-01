@@ -318,6 +318,12 @@
   color: inherit;
 }
 
+.dashboard-theme .recharts-tooltip-wrapper,
+.dashboard-theme .recharts-default-tooltip,
+.dashboard-theme .recharts-tooltip-item {
+  color: #ffffff !important;
+}
+
 .dashboard-theme .campaign-wizard-step-complete,
 .dashboard-theme .campaign-wizard-step-complete *,
 .dashboard-theme .campaign-wizard-step-complete svg {
