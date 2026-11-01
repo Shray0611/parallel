@@ -4,7 +4,7 @@ import { z } from "zod";
 import { Campaign } from "../models/Campaign.js";
 import { Lead } from "../models/Lead.js";
 import { requireAuth } from "../middleware/auth.js";
-import { runCampaign, inMemoryCampaigns, inMemoryLeads } from "../pipeline/runCampaign.js";
+import { runCampaign, findMoreLeads, rerunObjective, inMemoryCampaigns, inMemoryLeads } from "../pipeline/runCampaign.js";
 import { eventBus } from "../pipeline/eventBus.js";
 import { isDbConnected } from "../config/db.js";
 import { logger } from "../config/logger.js";
@@ -89,7 +89,15 @@ campaignRouter.post("/", requireAuth, async (req: Request, res: Response): Promi
       hot: 0,
       warm: 0,
       cold: 0,
-      apiCalls: { groq: 0, parallelEntity: 0, parallelSearch: 0 }
+      apiCalls: {
+        groq: 0,
+        parallelEntity: 0,
+        parallelSearch: 0,
+        parallelFindAll: 0,
+        parallelExtract: 0,
+        parallelTask: 0,
+        parallelMonitor: 0
+      }
     }
   };
 
@@ -404,4 +412,100 @@ campaignRouter.get("/:id/export.csv", requireAuth, async (req: Request, res: Res
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", `attachment; filename=leads-campaign-${id}.csv`);
   res.send(csvRows.join("\n"));
+});
+
+// -----------------------------------------------------------------------------
+// POST /api/campaigns/:id/queries/:index/find-more
+// -----------------------------------------------------------------------------
+campaignRouter.post("/:id/queries/:index/find-more", requireAuth, async (req: Request, res: Response): Promise<void> => {
+  const id = getParamId(req.params.id);
+  const objectiveIndex = parseInt(String(req.params.index), 10);
+  if (isNaN(objectiveIndex) || objectiveIndex < 0) {
+    res.status(400).json({ error: { message: "Invalid objective index", code: "INVALID_INDEX" } });
+    return;
+  }
+  let campaign: any = null;
+  if (isDbConnected()) { campaign = await Campaign.findById(id); }
+  else { campaign = inMemoryCampaigns.get(id); }
+  if (!campaign) {
+    res.status(404).json({ error: { message: "Campaign not found", code: "NOT_FOUND" } });
+    return;
+  }
+  if (campaign.status === "running") {
+    res.status(409).json({ error: { message: "Pipeline is currently running", code: "PIPELINE_RUNNING" } });
+    return;
+  }
+  res.status(202).json({ message: "Finding more leads...", campaignId: id, objectiveIndex });
+  setImmediate(() => {
+    findMoreLeads(id, objectiveIndex).catch((err) => {
+      logger.error({ err, campaignId: id, objectiveIndex }, "Find more leads failed");
+      eventBus.emitError({ campaignId: id, message: `Find more leads failed: ${err.message}` });
+    });
+  });
+});
+
+// -----------------------------------------------------------------------------
+// PUT /api/campaigns/:id/queries/:index � update a search objective text
+// -----------------------------------------------------------------------------
+campaignRouter.put("/:id/queries/:index", requireAuth, async (req: Request, res: Response): Promise<void> => {
+  const id = getParamId(req.params.id);
+  const objectiveIndex = parseInt(String(req.params.index), 10);
+  const { objective, rationale } = req.body;
+  if (!objective || typeof objective !== "string" || objective.trim().length < 5) {
+    res.status(400).json({ error: { message: "Objective text is required (min 5 chars)", code: "VALIDATION_ERROR" } });
+    return;
+  }
+  if (isNaN(objectiveIndex) || objectiveIndex < 0) {
+    res.status(400).json({ error: { message: "Invalid objective index", code: "INVALID_INDEX" } });
+    return;
+  }
+  if (isDbConnected()) {
+    const campaign = await Campaign.findById(id);
+    if (!campaign) { res.status(404).json({ error: { message: "Campaign not found", code: "NOT_FOUND" } }); return; }
+    if (!campaign.searchObjectives || !campaign.searchObjectives[objectiveIndex]) {
+      res.status(404).json({ error: { message: "Objective index not found", code: "NOT_FOUND" } }); return;
+    }
+    campaign.searchObjectives[objectiveIndex].objective = objective.trim();
+    if (rationale) campaign.searchObjectives[objectiveIndex].rationale = rationale.trim();
+    if ((campaign as any).findallRunIds) (campaign as any).findallRunIds[objectiveIndex] = "";
+    await campaign.save();
+    res.json({ campaign });
+    return;
+  }
+  const campaign = inMemoryCampaigns.get(id);
+  if (!campaign || !campaign.searchObjectives?.[objectiveIndex]) {
+    res.status(404).json({ error: { message: "Campaign or objective not found", code: "NOT_FOUND" } }); return;
+  }
+  campaign.searchObjectives[objectiveIndex].objective = objective.trim();
+  if (rationale) campaign.searchObjectives[objectiveIndex].rationale = rationale.trim();
+  if (campaign.findallRunIds) campaign.findallRunIds[objectiveIndex] = "";
+  inMemoryCampaigns.set(id, campaign);
+  res.json({ campaign });
+});
+
+// -----------------------------------------------------------------------------
+// POST /api/campaigns/:id/queries/:index/rerun � rerun a specific query fresh
+// -----------------------------------------------------------------------------
+campaignRouter.post("/:id/queries/:index/rerun", requireAuth, async (req: Request, res: Response): Promise<void> => {
+  const id = getParamId(req.params.id);
+  const objectiveIndex = parseInt(String(req.params.index), 10);
+  if (isNaN(objectiveIndex) || objectiveIndex < 0) {
+    res.status(400).json({ error: { message: "Invalid objective index", code: "INVALID_INDEX" } });
+    return;
+  }
+  let campaign: any = null;
+  if (isDbConnected()) { campaign = await Campaign.findById(id); }
+  else { campaign = inMemoryCampaigns.get(id); }
+  if (!campaign) { res.status(404).json({ error: { message: "Campaign not found", code: "NOT_FOUND" } }); return; }
+  if (campaign.status === "running") {
+    res.status(409).json({ error: { message: "Pipeline is currently running", code: "PIPELINE_RUNNING" } });
+    return;
+  }
+  res.status(202).json({ message: "Re-running query...", campaignId: id, objectiveIndex });
+  setImmediate(() => {
+    rerunObjective(id, objectiveIndex).catch((err) => {
+      logger.error({ err, campaignId: id, objectiveIndex }, "Rerun objective failed");
+      eventBus.emitError({ campaignId: id, message: `Rerun failed: ${err.message}` });
+    });
+  });
 });

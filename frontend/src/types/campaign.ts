@@ -29,6 +29,10 @@ export interface CampaignStats {
     groq?: number;
     parallelEntity: number;
     parallelSearch: number;
+    parallelFindAll?: number;
+    parallelExtract?: number;
+    parallelTask?: number;
+    parallelMonitor?: number;
   };
 }
 
@@ -49,6 +53,7 @@ export interface Campaign {
   filters: CampaignFilters;
   icp?: IcpData;
   searchObjectives?: SearchObjective[];
+  findallRunIds?: string[];
   status: "draft" | "running" | "completed" | "failed";
   progress: CampaignProgress;
   stats: CampaignStats;
@@ -95,6 +100,12 @@ export interface Lead {
   domain: string;
   description: string;
   sourceObjectiveIndex: number;
+  sourceObjectiveQuery?: string;
+  extractedSummary?: string;
+  taskResearch?: string;
+  taskRunId?: string;
+  monitorId?: string;
+  findallAttributes?: Record<string, string | number | boolean>;
   enrichment?: {
     results: EnrichmentResult[];
     fetchedAt: string;

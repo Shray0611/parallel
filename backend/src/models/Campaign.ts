@@ -19,6 +19,10 @@ export interface ICampaignStats {
     groq?: number;
     parallelEntity: number;
     parallelSearch: number;
+    parallelFindAll?: number;
+    parallelExtract?: number;
+    parallelTask?: number;
+    parallelMonitor?: number;
   };
 }
 
@@ -47,6 +51,7 @@ export interface ICampaign extends Document {
   };
   icp?: IIcp;
   searchObjectives?: ISearchObjective[];
+  findallRunIds?: string[]; // Parallel FindAll run IDs per objective (for extend/find-more)
   status: "draft" | "running" | "completed" | "failed";
   progress: ICampaignProgress;
   stats: ICampaignStats;
@@ -84,6 +89,7 @@ const campaignSchema = new Schema<ICampaign>(
         rationale: { type: String, required: true }
       }
     ],
+    findallRunIds: { type: [String], default: [] },
     status: {
       type: String,
       enum: ["draft", "running", "completed", "failed"],
@@ -111,7 +117,11 @@ const campaignSchema = new Schema<ICampaign>(
         gemini: { type: Number, default: 0 },
         groq: { type: Number, default: 0 },
         parallelEntity: { type: Number, default: 0 },
-        parallelSearch: { type: Number, default: 0 }
+        parallelSearch: { type: Number, default: 0 },
+        parallelFindAll: { type: Number, default: 0 },
+        parallelExtract: { type: Number, default: 0 },
+        parallelTask: { type: Number, default: 0 },
+        parallelMonitor: { type: Number, default: 0 }
       }
     },
     sessionId: { type: String, required: true },

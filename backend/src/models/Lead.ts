@@ -42,6 +42,12 @@ export interface ILead extends Document {
   domain: string;
   description: string;
   sourceObjectiveIndex: number;
+  sourceObjectiveQuery?: string;
+  extractedSummary?: string;
+  taskResearch?: string;
+  taskRunId?: string;
+  monitorId?: string;
+  findallAttributes?: Record<string, any>;
   enrichment?: ILeadEnrichment;
   score?: ILeadScore;
   outreach?: ILeadOutreach;
@@ -60,6 +66,12 @@ const leadSchema = new Schema<ILead>(
     domain: { type: String, required: true, trim: true, index: true },
     description: { type: String, default: "" },
     sourceObjectiveIndex: { type: Number, default: 0 },
+    sourceObjectiveQuery: { type: String, default: '' },
+    extractedSummary: { type: String, default: '' },
+    taskResearch: { type: String, default: '' },
+    taskRunId: { type: String, default: '' },
+    monitorId: { type: String, default: '' },
+    findallAttributes: { type: Schema.Types.Mixed, default: {} },
     enrichment: {
       results: [
         {
