@@ -55,12 +55,12 @@ export default function Settings() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+    <div className="dashboard-theme mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            <h1 className="text-4xl font-normal tracking-tight text-[#f7f3ee] sm:text-5xl">
               System Settings & Integration Health
             </h1>
             <Badge
@@ -70,7 +70,7 @@ export default function Settings() {
               {health?.status || "Checking"}
             </Badge>
           </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="mt-2 max-w-3xl text-base leading-relaxed text-[#b8b3ad] sm:text-lg">
             Real-time diagnostics for Google Gemini LLM, Parallel Search APIs, Database, and Demo Fallback
           </p>
         </div>
@@ -89,7 +89,7 @@ export default function Settings() {
       {/* Service Health Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Database */}
-        <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
+        <Card className="dashboard-section-card border-white/10 shadow-none">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Database Engine</span>
@@ -123,7 +123,7 @@ export default function Settings() {
         </Card>
 
         {/* Groq LLM (Primary) */}
-        <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
+        <Card className="dashboard-section-card border-white/10 shadow-none">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Primary Engine</span>
@@ -162,7 +162,7 @@ export default function Settings() {
         </Card>
 
         {/* Google Gemini LLM (Fallback) */}
-        <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
+        <Card className="dashboard-section-card border-white/10 shadow-none">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Fallback Engine</span>
@@ -201,7 +201,7 @@ export default function Settings() {
         </Card>
 
         {/* Parallel Search */}
-        <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
+        <Card className="dashboard-section-card border-white/10 shadow-none">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Web Intelligence</span>
@@ -236,7 +236,7 @@ export default function Settings() {
       </div>
 
       {/* Parallel Web Systems Integration Architecture */}
-      <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
+      <Card className="dashboard-section-card border-white/10 shadow-none">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Globe className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -295,7 +295,7 @@ export default function Settings() {
       </Card>
 
       {/* Demo Mode Configuration Details */}
-      <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
+      <Card className="dashboard-section-card border-white/10 shadow-none">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

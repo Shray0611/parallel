@@ -729,7 +729,7 @@ export default function CampaignDetail() {
 
   // ── Main render ────────────────────────────────────────────────────────────
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+    <div className="dashboard-theme mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       {/* Top Navigation */}
       <div className="flex items-center gap-2 text-sm text-slate-500">
         <Link to="/" className="hover:text-blue-600 flex items-center gap-1">

@@ -77,3 +77,283 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+.login-page,
+.login-page * {
+  font-family: Luciana, "Lucida Sans Unicode", "Lucida Grande", sans-serif !important;
+}
+
+.login-page .login-card {
+  background-color: rgba(15, 23, 42, 0.22) !important;
+  backdrop-filter: blur(10px);
+}
+
+.login-page [class*="text-blue-"],
+.login-page [class*="text-sky-"] {
+  color: #e74c3c !important;
+}
+
+.login-page [class*="bg-blue-"],
+.login-page [class*="bg-sky-"] {
+  background-color: rgba(231, 76, 60, 0.12) !important;
+}
+
+.login-page [class*="border-blue-"],
+.login-page [class*="border-sky-"] {
+  border-color: rgba(231, 76, 60, 0.55) !important;
+}
+
+.login-page input:focus-visible {
+  --tw-ring-color: #e74c3c !important;
+}
+
+.floating-navbar {
+  position: sticky;
+  font-family: Luciana, Georgia, "Times New Roman", serif;
+}
+
+.dashboard-theme {
+  color: #f7f3ee;
+  font-family: Luciana, "Helvetica Neue", Arial, sans-serif;
+}
+
+.dashboard-theme h1,
+.dashboard-theme h2,
+.dashboard-theme h3,
+.dashboard-theme .font-semibold {
+  font-family: Luciana, Georgia, "Times New Roman", serif;
+}
+
+.dashboard-theme h1 {
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.dashboard-theme .rounded-xl {
+  border-color: rgba(255, 255, 255, 0.055) !important;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.025) 38%, rgba(255, 255, 255, 0.08)),
+    rgba(38, 38, 38, 0.38) !important;
+  backdrop-filter: blur(14px) saturate(115%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.035),
+    0 14px 32px rgba(0, 0, 0, 0.18);
+  border-top-color: rgba(255, 255, 255, 0.14) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.035) !important;
+}
+
+.dashboard-theme .grid > .rounded-xl {
+  position: relative;
+  font-size: 1rem;
+  min-height: 100%;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.dashboard-theme .grid > .rounded-xl [class*="text-xs"] {
+  font-size: 0.875rem !important;
+}
+
+.dashboard-theme .grid > .rounded-xl [class*="text-sm"] {
+  font-size: 1rem !important;
+}
+
+.dashboard-theme .grid > .rounded-xl [class*="text-3xl"] {
+  font-size: 2.75rem !important;
+}
+
+.dashboard-theme .grid > .rounded-xl::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 18%, rgba(255, 255, 255, 0.09) 46%, transparent 68%);
+  opacity: 0.45;
+}
+
+.dashboard-theme .kpi-grid {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.025) 42%, rgba(255, 255, 255, 0.09)),
+    rgba(55, 55, 55, 0.10);
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.035),
+    0 14px 32px rgba(0, 0, 0, 0.18);
+}
+
+.dashboard-theme .kpi-grid > .rounded-xl {
+  border-radius: 0 !important;
+  background: transparent !important;
+  backdrop-filter: none;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+.dashboard-theme .kpi-card {
+  background: transparent !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+.dashboard-theme .kpi-card:not(:first-child) {
+  border-left: 1px solid rgba(255, 255, 255, 0.055) !important;
+}
+
+.dashboard-theme .dashboard-section-card {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.025) 42%, rgba(255, 255, 255, 0.07)),
+    rgba(55, 55, 55, 0.10) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.035),
+    0 14px 32px rgba(0, 0, 0, 0.18) !important;
+}
+
+.dashboard-theme .kpi-grid > .rounded-xl::before {
+  display: none;
+}
+
+.dashboard-theme .rounded-xl > .p-6:first-child {
+  padding-bottom: 0.75rem;
+}
+
+.dashboard-theme .rounded-xl CardHeader {
+  padding-bottom: 0.75rem;
+}
+
+.dashboard-theme .text-slate-900,
+.dashboard-theme .text-slate-700,
+.dashboard-theme .dark\:text-slate-100 {
+  color: #f7f3ee !important;
+}
+
+.dashboard-theme .text-slate-500,
+.dashboard-theme .text-slate-400,
+.dashboard-theme .dark\:text-slate-400 {
+  color: #918e89 !important;
+}
+
+.dashboard-theme .text-slate-800,
+.dashboard-theme .text-slate-900,
+.dashboard-theme .dark\:text-slate-100,
+.dashboard-theme .text-gray-900,
+.dashboard-theme .text-black {
+  color: #ffffff !important;
+}
+
+.dashboard-theme .rounded-xl [role="heading"],
+.dashboard-theme .rounded-xl h3,
+.dashboard-theme .rounded-xl [data-slot="card-description"] {
+  color: #ffffff !important;
+}
+
+.dashboard-theme .rounded-xl p.text-sm,
+.dashboard-theme .rounded-xl p.text-xs,
+.dashboard-theme .rounded-xl [class*="text-[11px]"] {
+  color: #c4c1bc !important;
+}
+
+.dashboard-theme .text-blue-600,
+.dashboard-theme .dark\:text-blue-400,
+.dashboard-theme [class*="text-blue-"] {
+  color: #e74c3c !important;
+}
+
+.dashboard-theme [class*="bg-blue-"] {
+  background-color: rgba(231, 76, 60, 0.16) !important;
+}
+
+.dashboard-theme .border-slate-200,
+.dashboard-theme .border-slate-800 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Normalize all protected-page typography to the dashboard palette. */
+.dashboard-theme .text-black,
+.dashboard-theme .text-gray-950,
+.dashboard-theme .text-gray-900,
+.dashboard-theme .text-gray-800,
+.dashboard-theme .text-slate-950,
+.dashboard-theme .text-slate-900,
+.dashboard-theme .text-slate-800,
+.dashboard-theme .text-slate-700,
+.dashboard-theme .text-slate-600 {
+  color: #ffffff !important;
+}
+
+.dashboard-theme .text-gray-500,
+.dashboard-theme .text-gray-400,
+.dashboard-theme .text-slate-500,
+.dashboard-theme .text-slate-400,
+.dashboard-theme .text-slate-300 {
+  color: #c7c4bf !important;
+}
+
+.dashboard-theme [class*="text-emerald"],
+.dashboard-theme [class*="text-green"],
+.dashboard-theme [class*="text-red"],
+.dashboard-theme [class*="text-amber"],
+.dashboard-theme [class*="text-yellow"],
+.dashboard-theme [class*="text-orange"],
+.dashboard-theme [class*="text-blue"],
+.dashboard-theme [class*="text-indigo"],
+.dashboard-theme [class*="text-purple"],
+.dashboard-theme [class*="text-violet"],
+.dashboard-theme [class*="text-cyan"],
+.dashboard-theme [class*="text-sky"],
+.dashboard-theme [class*="text-pink"] {
+  color: #e74c3c !important;
+}
+
+.dashboard-theme svg.lucide {
+  color: inherit;
+}
+
+.dashboard-theme .campaign-wizard-step-complete,
+.dashboard-theme .campaign-wizard-step-complete *,
+.dashboard-theme .campaign-wizard-step-complete svg {
+  color: #35d07f !important;
+}
+
+.dashboard-theme .campaign-wizard-step-complete {
+  background-color: transparent !important;
+}
+
+.dashboard-theme input,
+.dashboard-theme textarea,
+.dashboard-theme select {
+  color: #f7f3ee !important;
+  background-color: rgba(255, 255, 255, 0.045) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.dashboard-theme input::placeholder,
+.dashboard-theme textarea::placeholder {
+  color: rgba(199, 196, 191, 0.72) !important;
+}
+
+.dashboard-theme select option {
+  color: #f7f3ee;
+  background: #252525;
+}
+
+.dashboard-theme [class*="bg-white"]:not(.dashboard-theme .kpi-grid),
+.dashboard-theme [class*="dark:bg-slate-9"],
+.dashboard-theme [class*="dark:bg-slate-8"],
+.dashboard-theme [class*="bg-slate-50"],
+.dashboard-theme [class*="bg-slate-100"] {
+  background-color: rgba(255, 255, 255, 0.035) !important;
+}
+
+.dashboard-theme button:not([class*="bg-[#e74c3c]"]) {
+  color: inherit;
+}

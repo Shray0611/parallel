@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import laptopOfficeBackground from "@/assets/laptop-office-plant-black-background-top-view.jpg";
 import { useAuthStore } from "@/store/useAuthStore";
 import { toast } from "sonner";
 import { Sparkles, ArrowRight, ShieldCheck, Loader2 } from "lucide-react";
@@ -48,29 +49,38 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
+    <div
+      className="login-page min-h-screen flex items-center justify-center bg-cover bg-center p-4"
+      style={{
+        backgroundImage: `linear-gradient(rgba(2, 6, 23, 0.72), rgba(2, 6, 23, 0.82)), url(${laptopOfficeBackground})`,
+        fontFamily: 'Luciana, "Lucida Sans Unicode", "Lucida Grande", sans-serif'
+      }}
+    >
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md font-black text-2xl">
+          <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#e74c3c] text-white shadow-md font-black text-2xl">
             C
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-2xl font-bold tracking-tight text-white drop-shadow-lg">
             Cerelabs LeadScope
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-slate-200 drop-shadow-md">
             AI-powered lead intelligence, ICP discovery & scoring
           </p>
         </div>
 
-        <Card className="border-slate-200 shadow-sm dark:border-slate-800">
+        <Card
+          className="login-card border-white/20 text-white shadow-2xl backdrop-blur-md"
+          style={{ backgroundColor: "rgba(15, 23, 42, 0.22)" }}
+        >
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-xl">Sign In</CardTitle>
-            <CardDescription>Enter your account credentials to access your dashboard</CardDescription>
+            <CardDescription className="text-slate-300">Enter your account credentials to access your dashboard</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="email">Work Email</Label>
+                <Label htmlFor="email" className="text-slate-200">Work Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -78,13 +88,14 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading || isDemoLoading}
+                  className="border-white/20 bg-white/10 text-white placeholder:text-slate-400"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-slate-200">Password</Label>
                 </div>
                 <Input
                   id="password"
@@ -93,13 +104,14 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading || isDemoLoading}
+                  className="border-white/20 bg-white/10 text-white placeholder:text-slate-400"
                   required
                 />
               </div>
 
               <Button
                 type="submit"
-                className="w-full mt-2"
+                className="w-full mt-2 bg-[#e74c3c] text-white hover:bg-[#c0392b]"
                 disabled={isLoading || isDemoLoading}
               >
                 {isLoading ? (
@@ -121,7 +133,7 @@ export default function Login() {
                 <span className="w-full border-t border-slate-200 dark:border-slate-800" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                <span className="bg-slate-900/80 px-2 text-slate-300">
                   Or instant access
                 </span>
               </div>
@@ -130,7 +142,7 @@ export default function Login() {
             <Button
               type="button"
               variant="outline"
-              className="w-full border-blue-200 bg-blue-50/50 hover:bg-blue-100/60 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60"
+              className="w-full border-[#e74c3c]/50 bg-[#e74c3c]/10 hover:bg-[#e74c3c]/20 text-[#e74c3c] dark:border-[#e74c3c]/40 dark:bg-[#e74c3c]/10 dark:text-[#f06a5d] dark:hover:bg-[#e74c3c]/20"
               onClick={handleUseDemo}
               disabled={isLoading || isDemoLoading}
             >
@@ -141,16 +153,16 @@ export default function Login() {
                 </>
               ) : (
                 <>
-                  <Sparkles className="mr-2 h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <Sparkles className="mr-2 h-4 w-4 text-[#e74c3c]" />
                   Use Demo Account (demo@cerelabs.ai)
                 </>
               )}
             </Button>
           </CardContent>
           <CardFooter className="flex justify-center border-t border-slate-100 dark:border-slate-800/80 pt-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-300">
               Don't have an account?{" "}
-              <Link to="/register" className="font-semibold text-blue-600 hover:underline dark:text-blue-400">
+              <Link to="/register" className="font-semibold text-[#e74c3c] hover:text-[#f06a5d] hover:underline">
                 Register here
               </Link>
             </p>

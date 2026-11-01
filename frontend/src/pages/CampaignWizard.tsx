@@ -247,7 +247,7 @@ export default function CampaignWizard() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+    <div className="dashboard-theme mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
       {/* Stepper Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
@@ -264,7 +264,7 @@ export default function CampaignWizard() {
               step === 1
                 ? "border-blue-600 bg-blue-50/50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-700"
                 : step > 1
-                ? "border-emerald-300 bg-emerald-50/40 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
+                ? "campaign-wizard-step-complete border-emerald-300 bg-transparent text-emerald-700 dark:border-emerald-700 dark:text-emerald-400"
                 : "border-slate-200 text-slate-400 dark:border-slate-800"
             }`}
           >
@@ -279,7 +279,7 @@ export default function CampaignWizard() {
               step === 2
                 ? "border-blue-600 bg-blue-50/50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-700"
                 : step > 2
-                ? "border-emerald-300 bg-emerald-50/40 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
+                ? "campaign-wizard-step-complete border-emerald-300 bg-transparent text-emerald-700 dark:border-emerald-700 dark:text-emerald-400"
                 : "border-slate-200 text-slate-400 dark:border-slate-800"
             }`}
           >
