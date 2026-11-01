@@ -36,12 +36,14 @@ export const icpOutputSchema = z.object({
   searchObjectives: z
     .array(
       z.object({
+        domain: z.string(),
         objective: z.string(),
-        rationale: z.string()
+        rationale: z.string(),
+        queries: z.array(z.string()).min(2).max(4)
       })
     )
-    .min(3)
-    .max(5)
+    .min(1)
+    .max(6)
 });
 
 export const leadQueryOutputSchema = z.object({
@@ -334,11 +336,11 @@ export class GeminiService {
       city?: string;
       companySize: string;
       domains: string[];
-    }
+    },
+    options?: { fresh?: boolean }
   ): Promise<IcpOutput> {
     const cacheKey = { action: "generate_icp", offering, valueProps, filters };
-
-    return cached("gemini", cacheKey, async () => {
+    const run = async () => {
       const systemPrompt = `You are a B2B sales strategist for Cerelabs, an enterprise AI products company.
 You must output a JSON object with:
 1. "icp": {
@@ -347,14 +349,18 @@ You must output a JSON object with:
      "buyerPersonas": string[],
      "disqualifiers": string[]
    }
-2. "searchObjectives": array of 3 to 5 objects: [ { "objective": string, "rationale": string } ]
+2. "searchObjectives": one object per selected industry. Shape:
+   { "domain": string, "objective": string, "rationale": string, "queries": string[] }
 
 CRITICAL RULES for searchObjectives:
-- Each "objective" is used directly by an entity search engine to find real companies.
-- Keep objectives focused on the core criterion (industry + country + size), not a long list of conditions.
-- Every single objective MUST explicitly mention the country "${filters.country}" and company size "${filters.companySize} employees".
-- Example objective format: "Mid-sized pharmaceutical manufacturers in ${filters.country} (${filters.companySize} employees) with large regulatory documentation that could benefit from document-AI / RAG".
-- Include distinct target angles across the requested domains: ${filters.domains.join(", ") || "target tech and enterprise sectors"}.`;
+- Build the list from the user's selected industries only. Do not reuse a sample industry the user did not pick.
+- If several industries are selected, return exactly one objective per industry.
+- If only one industry is selected, return 3 different buying angles for that same industry.
+- "domain" must be one of: ${filters.domains.join(", ") || "Enterprise"}.
+- "objective" is the exact sentence that will be sent to a company-discovery engine. One sentence. Name the industry, the country "${filters.country}", and the size "${filters.companySize} employees". Describe the document or workflow pain that matches the offering. Do not name a specific company.
+- "queries" is exactly 3 short web queries, each 3 to 6 words, that will be shown to the user before search. Each query names the industry or the workflow, never a company, and never uses site: or quotes.
+- "rationale" is one sentence on why this angle fits the offering.
+- Keep each objective distinct. Do not repeat the same sentence with a swapped industry noun only when a real workflow difference exists; change the workflow, not just the label.`;
 
       const userPrompt = `Cerelabs Offering: ${offering}
 Core Value Propositions:
@@ -366,7 +372,10 @@ Filters:
 - Target Industry Domains: ${filters.domains.join(", ") || "General Enterprise"}`;
 
       return await callLLMWithFallback(systemPrompt, userPrompt, icpOutputSchema);
-    });
+    };
+
+    if (options?.fresh) return run();
+    return cached("gemini", cacheKey, run);
   }
 
   // Stage 3: Generate search queries for lead enrichment

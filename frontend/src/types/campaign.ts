@@ -1,6 +1,8 @@
 export interface SearchObjective {
+  domain?: string;
   objective: string;
   rationale: string;
+  queries?: string[];
 }
 
 export interface IcpData {
@@ -102,6 +104,12 @@ export interface Lead {
   sourceObjectiveIndex: number;
   sourceObjectiveQuery?: string;
   extractedSummary?: string;
+  websiteExtract?: {
+    url: string;
+    title?: string;
+    publishDate?: string | null;
+    excerpts: string[];
+  };
   taskResearch?: string;
   taskRunId?: string;
   monitorId?: string;

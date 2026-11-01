@@ -463,6 +463,9 @@ export default function CampaignDetail() {
             <Badge variant="outline" className="text-[10px] flex-shrink-0">
               {groupLeads.length} lead{groupLeads.length !== 1 ? "s" : ""}
             </Badge>
+            {(obj as any)?.domain && (
+              <Badge variant="secondary" className="text-[10px] flex-shrink-0">{(obj as any).domain}</Badge>
+            )}
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -513,9 +516,20 @@ export default function CampaignDetail() {
           </div>
         </div>
 
-        {obj?.rationale && !isCollapsed && (
-          <div className="px-4 py-1.5 text-xs text-slate-500 dark:text-slate-400 italic border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/30">
-            {(obj as any).rationale}
+        {!isCollapsed && ((obj as any)?.queries?.length > 0 || obj?.rationale) && (
+          <div className="px-4 py-2 space-y-1.5 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/30">
+            {obj?.rationale && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 italic">{(obj as any).rationale}</p>
+            )}
+            {(obj as any)?.queries?.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {(obj as any).queries.map((query: string, queryIndex: number) => (
+                  <span key={`${queryIndex}-${query}`} className="rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 text-[11px] text-slate-600 dark:text-slate-300">
+                    {query}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1054,14 +1068,37 @@ export default function CampaignDetail() {
               )}
 
               {/* Parallel Extract API Data */}
-              {selectedLead.extractedSummary && (
+              {(selectedLead.websiteExtract?.excerpts?.length || selectedLead.extractedSummary) && (
                 <div className="space-y-2">
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                    <Layers className="h-4 w-4 text-purple-600" /> Live Website Extract (Parallel Extract API)
-                  </h3>
-                  <div className="p-3 rounded-lg border border-purple-200 bg-purple-50/50 dark:border-purple-900/60 dark:bg-purple-950/20 text-xs text-purple-950 dark:text-purple-200 leading-relaxed">
-                    {selectedLead.extractedSummary}
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                      <Layers className="h-4 w-4 text-purple-600" /> From their website
+                    </h3>
+                    {selectedLead.websiteExtract?.url && (
+                      <a
+                        href={selectedLead.websiteExtract.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] text-blue-600 hover:underline inline-flex items-center gap-1"
+                      >
+                        {selectedLead.websiteExtract.title || "Open page"}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
                   </div>
+                  {selectedLead.websiteExtract?.excerpts?.length ? (
+                    <div className="space-y-2">
+                      {selectedLead.websiteExtract.excerpts.map((excerpt, idx) => (
+                        <div key={idx} className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3">
+                          <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{excerpt}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3">
+                      <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{selectedLead.extractedSummary}</p>
+                    </div>
+                  )}
                 </div>
               )}
 

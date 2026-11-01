@@ -18,6 +18,15 @@ const fixturesData: any[] = JSON.parse(fs.readFileSync(fixturesPath, "utf-8"));
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+function tidyExtractText(value: string): string {
+  return String(value || "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/Section Title:\s*/gi, "")
+    .replace(/Content:\s*/gi, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 export function extractDomain(urlStr: string): string {
   try {
     const parsed = new URL(urlStr.startsWith("http") ? urlStr : `https://${urlStr}`);
@@ -121,14 +130,24 @@ async function enrichAndScoreLead(
       campaign.stats.apiCalls.parallelExtract = (campaign.stats.apiCalls.parallelExtract || 0) + 1;
       const firstResult = extractRes?.results?.[0];
       if (firstResult) {
+        const excerpts = (firstResult.excerpts || [])
+          .map((item: string) => tidyExtractText(item))
+          .filter(Boolean)
+          .slice(0, 6);
+        lead.websiteExtract = {
+          url: firstResult.url || lead.website,
+          title: firstResult.title || lead.name,
+          publishDate: firstResult.publish_date || null,
+          excerpts
+        };
         lead.extractedSummary =
-          firstResult.summary ||
-          (firstResult.excerpts || []).join("\n\n").slice(0, 2000) ||
-          firstResult.full_content?.slice(0, 2000) ||
-          firstResult.content?.slice(0, 2000) ||
-          "";
+          excerpts.join("\n\n").slice(0, 2000) ||
+          tidyExtractText(firstResult.summary || firstResult.full_content || firstResult.content || "").slice(0, 2000);
         if (isDbConnected()) {
-          await Lead.findByIdAndUpdate(lead._id, { extractedSummary: lead.extractedSummary });
+          await Lead.findByIdAndUpdate(lead._id, {
+            extractedSummary: lead.extractedSummary,
+            websiteExtract: lead.websiteExtract
+          });
         }
       }
     } catch (err) {
@@ -299,12 +318,16 @@ async function discoverLeadsForObjective(
   campaign: any,
   matchLimit: number = 10,
   existingRunId?: string,
-  onBatch?: (matches: FindAllMatch[], source: "entity" | "findall") => Promise<void> | void
+  onBatch?: (matches: FindAllMatch[], source: "entity" | "findall") => Promise<void> | void,
+  queries: string[] = []
 ): Promise<{ matches: FindAllMatch[]; runId: string }> {
+  const focus = queries.filter(Boolean).slice(0, 4);
   const matchConditions: FindAllMatchCondition[] = [
     {
-      name: "target_market_match",
-      description: `Company must be an active, verified organization matching: ${objective}`
+      name: "offering_fit_check",
+      description: focus.length
+        ? `${objective} Prioritize companies connected to: ${focus.join("; ")}.`
+        : objective
     }
   ];
 
@@ -682,18 +705,32 @@ async function runLivePipeline(campaign: any): Promise<void> {
     message: "AI engine is analyzing your product offering and market filters..."
   });
 
-  const icpOutput = await GeminiService.generateICP(
-    campaign.offering,
-    campaign.valueProps || [],
-    campaign.filters
-  );
+  const reviewedObjectives = (campaign.searchObjectives || []).filter((item: any) => item?.objective?.trim());
+  const hasIcp = Boolean(campaign.icp?.summary);
 
-  campaign.icp = icpOutput.icp;
-  campaign.searchObjectives = icpOutput.searchObjectives;
-  if (GeminiService.getLastProvider() === "groq") {
-    campaign.stats.apiCalls.groq = (campaign.stats.apiCalls.groq || 0) + 1;
+  if (reviewedObjectives.length > 0 && hasIcp) {
+    campaign.searchObjectives = reviewedObjectives;
+    campaign.progress.message = "Using the search objectives you reviewed before launch...";
+    eventBus.emitProgress({
+      campaignId,
+      stage: "icp",
+      current: 1,
+      total: 5,
+      message: `Using ${reviewedObjectives.length} reviewed search objectives. Nothing was regenerated.`
+    });
   } else {
-    campaign.stats.apiCalls.gemini = (campaign.stats.apiCalls.gemini || 0) + 1;
+    const icpOutput = await GeminiService.generateICP(
+      campaign.offering,
+      campaign.valueProps || [],
+      campaign.filters
+    );
+    if (!hasIcp) campaign.icp = icpOutput.icp;
+    if (reviewedObjectives.length === 0) campaign.searchObjectives = icpOutput.searchObjectives;
+    if (GeminiService.getLastProvider() === "groq") {
+      campaign.stats.apiCalls.groq = (campaign.stats.apiCalls.groq || 0) + 1;
+    } else {
+      campaign.stats.apiCalls.gemini = (campaign.stats.apiCalls.gemini || 0) + 1;
+    }
   }
   await saveCampaign(campaign);
 
@@ -808,7 +845,8 @@ async function runLivePipeline(campaign: any): Promise<void> {
             total: 5,
             message: `Live leads arriving — ${createdLeads.length} companies found so far...`
           });
-        }
+        },
+        obj.queries || []
       );
 
       if (runId) findallRunIds[idx] = runId;
@@ -957,7 +995,8 @@ export async function findMoreLeads(campaignId: string, objectiveIndex: number):
     campaign,
     10,
     existingRunId || undefined,
-    persistFound
+    persistFound,
+    obj.queries || []
   );
 
   if (runId && runId !== existingRunId) {

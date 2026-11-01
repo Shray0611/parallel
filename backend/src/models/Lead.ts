@@ -44,6 +44,12 @@ export interface ILead extends Document {
   sourceObjectiveIndex: number;
   sourceObjectiveQuery?: string;
   extractedSummary?: string;
+  websiteExtract?: {
+    url: string;
+    title?: string;
+    publishDate?: string | null;
+    excerpts: string[];
+  };
   taskResearch?: string;
   taskRunId?: string;
   monitorId?: string;
@@ -68,6 +74,12 @@ const leadSchema = new Schema<ILead>(
     sourceObjectiveIndex: { type: Number, default: 0 },
     sourceObjectiveQuery: { type: String, default: '' },
     extractedSummary: { type: String, default: '' },
+    websiteExtract: {
+      url: { type: String, default: '' },
+      title: { type: String, default: '' },
+      publishDate: { type: String, default: null },
+      excerpts: { type: [String], default: [] }
+    },
     taskResearch: { type: String, default: '' },
     taskRunId: { type: String, default: '' },
     monitorId: { type: String, default: '' },

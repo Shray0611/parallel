@@ -5,6 +5,7 @@ import { Campaign } from "../models/Campaign.js";
 import { Lead } from "../models/Lead.js";
 import { requireAuth } from "../middleware/auth.js";
 import { runCampaign, findMoreLeads, rerunObjective, inMemoryCampaigns, inMemoryLeads } from "../pipeline/runCampaign.js";
+import { GeminiService } from "../services/gemini.service.js";
 import { eventBus } from "../pipeline/eventBus.js";
 import { isDbConnected } from "../config/db.js";
 import { logger } from "../config/logger.js";
@@ -17,16 +18,41 @@ function getParamId(param: string | string[] | undefined): string {
 }
 
 // Campaign Creation validation
+const filtersSchema = z.object({
+  country: z.string().default("IN"),
+  city: z.string().optional(),
+  companySize: z.enum(["1-50", "51-200", "201-1000", "1001-5000", "5000+"]).default("51-200"),
+  domains: z.array(z.string()).default([])
+});
+
+const searchObjectiveSchema = z.object({
+  domain: z.string().optional().default(""),
+  objective: z.string().min(5),
+  rationale: z.string().optional().default(""),
+  queries: z.array(z.string()).default([])
+});
+
+const icpSchema = z.object({
+  summary: z.string(),
+  painPoints: z.array(z.string()).default([]),
+  buyerPersonas: z.array(z.string()).default([]),
+  disqualifiers: z.array(z.string()).default([])
+});
+
 const createCampaignSchema = z.object({
   title: z.string().min(2, "Title is required"),
   offering: z.string().min(5, "Product offering description is required"),
   valueProps: z.array(z.string()).default([]),
-  filters: z.object({
-    country: z.string().default("IN"),
-    city: z.string().optional(),
-    companySize: z.enum(["1-50", "51-200", "201-1000", "1001-5000", "5000+"]).default("51-200"),
-    domains: z.array(z.string()).default([])
-  })
+  filters: filtersSchema,
+  icp: icpSchema.optional(),
+  searchObjectives: z.array(searchObjectiveSchema).optional()
+});
+
+const previewSchema = z.object({
+  offering: z.string().min(5),
+  valueProps: z.array(z.string()).default([]),
+  filters: filtersSchema,
+  fresh: z.boolean().optional()
 });
 
 // GET /api/campaigns — list user's campaigns, newest first
@@ -65,7 +91,7 @@ campaignRouter.post("/", requireAuth, async (req: Request, res: Response): Promi
   }
 
   const userId = req.user!.id;
-  const { title, offering, valueProps, filters } = parsed.data;
+  const { title, offering, valueProps, filters, icp, searchObjectives } = parsed.data;
   const sessionId = `session-${crypto.randomUUID()}`;
 
   const campaignData = {
@@ -74,6 +100,8 @@ campaignRouter.post("/", requireAuth, async (req: Request, res: Response): Promi
     offering,
     valueProps,
     filters,
+    ...(icp ? { icp } : {}),
+    ...(searchObjectives?.length ? { searchObjectives } : {}),
     status: "draft" as const,
     sessionId,
     progress: {
@@ -122,6 +150,34 @@ campaignRouter.post("/", requireAuth, async (req: Request, res: Response): Promi
   };
   inMemoryCampaigns.set(id, mockCampaign);
   res.status(201).json({ campaign: mockCampaign });
+});
+
+// POST /api/campaigns/preview-objectives — LLM plan shown before a run is sent
+campaignRouter.post("/preview-objectives", requireAuth, async (req: Request, res: Response): Promise<void> => {
+  const parsed = previewSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({
+      error: {
+        message: parsed.error.errors[0]?.message || "Invalid preview data",
+        code: "VALIDATION_ERROR"
+      }
+    });
+    return;
+  }
+
+  const { offering, valueProps, filters, fresh } = parsed.data;
+  try {
+    const plan = await GeminiService.generateICP(offering, valueProps, filters, { fresh: Boolean(fresh) });
+    res.json(plan);
+  } catch (err: any) {
+    logger.error({ err }, "Failed to preview search objectives");
+    res.status(502).json({
+      error: {
+        message: err.message || "Could not generate search objectives",
+        code: "PREVIEW_FAILED"
+      }
+    });
+  }
 });
 
 // GET /api/campaigns/:id — fetch single campaign

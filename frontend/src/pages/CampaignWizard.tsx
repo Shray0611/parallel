@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { apiRequest } from "@/lib/api";
+import { IcpData, SearchObjective } from "@/types/campaign";
 import {
   Sparkles,
   ArrowRight,
@@ -86,6 +87,7 @@ export default function CampaignWizard() {
   const navigate = useNavigate();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Form State
   const [title, setTitle] = useState("");
@@ -98,21 +100,8 @@ export default function CampaignWizard() {
   const [companySize, setCompanySize] = useState<"1-50" | "51-200" | "201-1000" | "1001-5000" | "5000+">("201-1000");
   const [selectedDomains, setSelectedDomains] = useState<string[]>(["Pharmaceuticals", "BFSI"]);
 
-  // Editable search objectives in Step 3
-  const [searchObjectives, setSearchObjectives] = useState<Array<{ objective: string; rationale: string }>>([
-    {
-      objective: "Mid-sized pharmaceutical manufacturers in India (201-1000 employees) with large regulatory documentation that could benefit from document-AI / RAG",
-      rationale: "High compliance overhead and audit requirements make them prime buyers"
-    },
-    {
-      objective: "Commercial banks and financial institutions in India (201-1000 employees) processing underwriting and loan documentation",
-      rationale: "Accelerating credit memo and compliance review turnaround"
-    },
-    {
-      objective: "Leading corporate legal firms and EPC conglomerates in India (201-1000 employees) handling extensive contract review",
-      rationale: "Virtual data room due diligence and tender extraction demands"
-    }
-  ]);
+  const [searchObjectives, setSearchObjectives] = useState<SearchObjective[]>([]);
+  const [icp, setIcp] = useState<IcpData | null>(null);
 
   const handleChipClick = (chip: typeof PRODUCT_CHIPS[0]) => {
     if (!title) setTitle(`${chip.name} Prospecting Campaign`);
@@ -142,8 +131,45 @@ export default function CampaignWizard() {
 
   const updateObjective = (index: number, newText: string) => {
     const updated = [...searchObjectives];
-    updated[index].objective = newText;
+    updated[index] = { ...updated[index], objective: newText };
     setSearchObjectives(updated);
+  };
+
+  const updateQuery = (index: number, queryIndex: number, newText: string) => {
+    const updated = [...searchObjectives];
+    const queries = [...(updated[index].queries || [])];
+    queries[queryIndex] = newText;
+    updated[index] = { ...updated[index], queries };
+    setSearchObjectives(updated);
+  };
+
+  const generateObjectives = async (fresh = false) => {
+    setIsGenerating(true);
+    try {
+      const plan = await apiRequest<{ icp: IcpData; searchObjectives: SearchObjective[] }>(
+        "/campaigns/preview-objectives",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            offering,
+            valueProps,
+            fresh,
+            filters: {
+              country,
+              city: city.trim() || undefined,
+              companySize,
+              domains: selectedDomains
+            }
+          })
+        }
+      );
+      setIcp(plan.icp);
+      setSearchObjectives(plan.searchObjectives || []);
+    } catch (err: any) {
+      toast.error(err.message || "Could not generate search objectives");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleStep1Next = () => {
@@ -164,24 +190,10 @@ export default function CampaignWizard() {
       return;
     }
 
-    // Update default objectives with selected filters
-    const selectedCountryName = COUNTRIES.find((c) => c.code === country)?.name || country;
-    setSearchObjectives([
-      {
-        objective: `${selectedDomains[0] || "Enterprise"} companies in ${selectedCountryName} (${companySize} employees) with heavy documentation for ${offering.slice(0, 50)}...`,
-        rationale: `Target core ${selectedDomains[0] || "industry"} operations in ${selectedCountryName}`
-      },
-      {
-        objective: `${selectedDomains[1] || selectedDomains[0] || "Enterprise"} organizations in ${selectedCountryName} (${companySize} employees) with active AI initiatives`,
-        rationale: "Target digitally mature enterprises with budget allocated for automation"
-      },
-      {
-        objective: `Regulated manufacturing and service leaders in ${selectedCountryName} (${companySize} employees) needing high-accuracy document intelligence`,
-        rationale: "Target compliance-critical workflows requiring citation-backed queries"
-      }
-    ]);
-
     setStep(3);
+    setSearchObjectives([]);
+    setIcp(null);
+    void generateObjectives(false);
   };
 
   const handleLaunchCampaign = async () => {
@@ -199,7 +211,9 @@ export default function CampaignWizard() {
             city: city.trim() || undefined,
             companySize,
             domains: selectedDomains
-          }
+          },
+          icp: icp || undefined,
+          searchObjectives
         })
       });
 
@@ -484,13 +498,27 @@ export default function CampaignWizard() {
       {step === 3 && (
         <Card className="border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
           <CardHeader>
-            <CardTitle>Review & Fine-Tune Search Objectives</CardTitle>
-            <CardDescription>
-              Each objective will be queried against Parallel Entity Search to find real companies. You can edit any objective inline before launching.
-            </CardDescription>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <CardTitle>Review before anything is sent</CardTitle>
+                <CardDescription>
+                  These objectives and queries were written by the model from your offering and filters. Edit them here. The company search uses this text exactly.
+                </CardDescription>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-1.5 shrink-0"
+                disabled={isGenerating || isSubmitting}
+                onClick={() => generateObjectives(true)}
+              >
+                <Loader2 className={`h-3.5 w-3.5 ${isGenerating ? "animate-spin" : "hidden"}`} />
+                Regenerate
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Summary Pill Bar */}
             <div className="flex flex-wrap items-center gap-2 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-xs">
               <span className="font-semibold text-slate-500">Filters:</span>
               <Badge variant="outline">{COUNTRIES.find((c) => c.code === country)?.name} ({country})</Badge>
@@ -501,39 +529,90 @@ export default function CampaignWizard() {
               ))}
             </div>
 
-            {/* Editable Objectives */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Target className="h-4 w-4 text-blue-600" />
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                  Search Objectives (Queried in Parallel)
-                </h3>
+            {isGenerating && (
+              <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50/70 px-4 py-6 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Writing one search plan per industry. Nothing has been sent yet.
               </div>
+            )}
 
-              {searchObjectives.map((obj, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2 shadow-xs"
-                >
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span className="font-medium text-blue-600 dark:text-blue-400">Objective #{idx + 1}</span>
-                    <span className="flex items-center gap-1">
-                      <Edit2 className="h-3 w-3" />
-                      Editable
-                    </span>
-                  </div>
-                  <textarea
-                    rows={2}
-                    value={obj.objective}
-                    onChange={(e) => updateObjective(idx, e.target.value)}
-                    className="w-full rounded-md border border-slate-200 bg-slate-50/50 p-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-600 dark:border-slate-700 dark:bg-slate-800/50"
-                  />
-                  <p className="text-xs text-slate-400">
-                    <span className="font-semibold text-slate-500">Rationale:</span> {obj.rationale}
-                  </p>
+            {!isGenerating && icp?.summary && (
+              <div className="rounded-lg border border-slate-200 dark:border-slate-800 p-4 space-y-2">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Ideal customer</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-300">{icp.summary}</p>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {icp.buyerPersonas.slice(0, 4).map((persona) => (
+                    <Badge key={persona} variant="outline">{persona}</Badge>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
+
+            {!isGenerating && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-blue-600" />
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    Search plans, separated by industry
+                  </h3>
+                </div>
+
+                {searchObjectives.length === 0 ? (
+                  <p className="text-sm text-slate-500">No objectives yet. Regenerate to write them from your offering.</p>
+                ) : (
+                  searchObjectives.map((obj, idx) => (
+                    <div
+                      key={`${obj.domain || "objective"}-${idx}`}
+                      className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3"
+                    >
+                      <div className="flex items-center justify-between gap-2 text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-blue-600 dark:text-blue-400">Plan {idx + 1}</span>
+                          {obj.domain && <Badge variant="secondary">{obj.domain}</Badge>}
+                        </div>
+                        <span className="flex items-center gap-1 text-slate-400">
+                          <Edit2 className="h-3 w-3" />
+                          Edit before send
+                        </span>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                          Company search sentence
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={obj.objective}
+                          onChange={(e) => updateObjective(idx, e.target.value)}
+                          className="w-full rounded-md border border-slate-200 bg-slate-50/50 p-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-600 dark:border-slate-700 dark:bg-slate-800/50"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                          Keyword queries sent with this plan
+                        </label>
+                        {(obj.queries || []).map((query, queryIndex) => (
+                          <input
+                            key={queryIndex}
+                            value={query}
+                            onChange={(e) => updateQuery(idx, queryIndex, e.target.value)}
+                            className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800"
+                          />
+                        ))}
+                      </div>
+
+                      {obj.rationale && (
+                        <p className="text-xs text-slate-500">
+                          <span className="font-semibold text-slate-600 dark:text-slate-300">Why this angle: </span>
+                          {obj.rationale}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </CardContent>
           <CardFooter className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-4">
             <Button variant="outline" onClick={() => setStep(2)} disabled={isSubmitting} className="gap-2">
@@ -542,7 +621,7 @@ export default function CampaignWizard() {
             </Button>
             <Button
               onClick={handleLaunchCampaign}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isGenerating || searchObjectives.length === 0}
               className="gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 shadow-sm"
             >
               {isSubmitting ? (

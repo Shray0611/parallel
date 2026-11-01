@@ -27,8 +27,10 @@ export interface ICampaignStats {
 }
 
 export interface ISearchObjective {
+  domain?: string;
   objective: string;
   rationale: string;
+  queries?: string[];
 }
 
 export interface IIcp {
@@ -85,8 +87,10 @@ const campaignSchema = new Schema<ICampaign>(
     },
     searchObjectives: [
       {
+        domain: { type: String, default: "" },
         objective: { type: String, required: true },
-        rationale: { type: String, required: true }
+        rationale: { type: String, required: true },
+        queries: { type: [String], default: [] }
       }
     ],
     findallRunIds: { type: [String], default: [] },
