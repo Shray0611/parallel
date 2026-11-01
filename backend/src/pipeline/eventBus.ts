@@ -6,6 +6,8 @@ export interface PipelineProgressEvent {
   current: number;
   total: number;
   message: string;
+  objectiveIndex?: number;
+  objective?: string;
 }
 
 export interface PipelineLeadEvent {

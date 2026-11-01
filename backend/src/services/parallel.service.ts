@@ -332,13 +332,11 @@ export class ParallelService {
       await sleep(pollIntervalMs);
     }
 
-    if (latestMatches.length > 0) {
-      logger.warn({ runId, matchCount: latestMatches.length }, "FindAll: timeout with partial matches");
-      return { id: runId, status: latestStatus || "running", matches: latestMatches };
-    }
-
-    logger.warn({ runId }, "FindAll: timeout waiting for results");
-    throw new Error(`FindAll run ${runId} timed out after ${maxWaitMs}ms`);
+    logger.warn(
+      { runId, matchCount: latestMatches.length, status: latestStatus },
+      "FindAll: wait ended with the matches collected so far"
+    );
+    return { id: runId, status: latestStatus || "running", matches: latestMatches };
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -461,7 +459,8 @@ export class ParallelService {
     objective: string,
     matchConditions: FindAllMatchCondition[] = [],
     matchLimit: number = 10,
-    doEnrich: boolean = true
+    doEnrich: boolean = true,
+    maxWaitMs: number = 75_000
   ): Promise<{ runId: string; matches: FindAllMatch[] }> {
     let finalConditions = matchConditions;
     let entityType = "companies";
@@ -484,13 +483,13 @@ export class ParallelService {
       throw new Error("FindAll create did not return a findall_id");
     }
 
-    const result = await this.findAllPollResults(runId, 180_000);
+    const result = await this.findAllPollResults(runId, maxWaitMs);
     let matches = result.matches || [];
 
-    if (doEnrich && runId && matches.length > 0) {
+    if (doEnrich && runId && matches.length > 0 && result.status !== "running" && result.status !== "queued") {
       try {
         await this.findAllEnrich(runId);
-        const enriched = await this.findAllPollResults(runId, 90_000);
+        const enriched = await this.findAllPollResults(runId, 45_000);
         if (enriched.matches && enriched.matches.length > 0) {
           matches = enriched.matches;
         }

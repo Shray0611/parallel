@@ -25,18 +25,34 @@ import {
   Zap,
   Flame,
   Activity,
-  Layers,
   FileText,
   AlertCircle,
   Globe,
   Edit3,
   PlusCircle,
-  MoreVertical
+  MoreVertical,
+  Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+
+function countryLabel(code?: string) {
+  if (!code) return "";
+  return QUERY_COUNTRIES.find((item) => item.code === code)?.name || code;
+}
+
+const QUERY_COUNTRIES = [
+  { code: "IN", name: "India" },
+  { code: "US", name: "United States" },
+  { code: "GB", name: "United Kingdom" },
+  { code: "DE", name: "Germany" },
+  { code: "SG", name: "Singapore" },
+  { code: "AE", name: "United Arab Emirates" },
+  { code: "AU", name: "Australia" },
+  { code: "CA", name: "Canada" }
+];
 
 export default function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
@@ -69,8 +85,21 @@ export default function CampaignDetail() {
   const [collapsedGroups, setCollapsedGroups] = useState<Record<number, boolean>>({});
 
   // Edit Query Modal
-  const [editQueryModal, setEditQueryModal] = useState<{ open: boolean; index: number; text: string; rationale: string } | null>(null);
+  const [editQueryModal, setEditQueryModal] = useState<{ open: boolean; index: number; text: string; rationale: string; domain: string; queries: string[]; country: string; city: string } | null>(null);
+  const [draftModal, setDraftModal] = useState<{
+    country: string;
+    city: string;
+    domain: string;
+    focus: string;
+    objective: string;
+    rationale: string;
+    queries: string[];
+    ready: boolean;
+  } | null>(null);
   const [editQuerySaving, setEditQuerySaving] = useState(false);
+  const [enhancingQuery, setEnhancingQuery] = useState(false);
+  const [generatingQuery, setGeneratingQuery] = useState(false);
+  const [activeSearch, setActiveSearch] = useState<{ index: number; objective: string } | null>(null);
   const [rerunAfterEdit, setRerunAfterEdit] = useState(false);
 
   // Fetches
@@ -122,8 +151,14 @@ export default function CampaignDetail() {
         const data = JSON.parse(e.data);
         setCampaign((prev) => {
           if (!prev) return null;
-          return { ...prev, status: "running", progress: { stage: data.stage, current: data.current, total: data.total, message: data.message } };
+          return { ...prev, status: data.stage === "completed" ? "completed" : "running", progress: { stage: data.stage, current: data.current, total: data.total, message: data.message } };
         });
+        if (typeof data.objectiveIndex === "number") {
+          setActiveSearch({ index: data.objectiveIndex, objective: data.objective || data.message });
+          if (data.stage !== "completed") {
+            setFindMoreLoading({ [data.objectiveIndex]: true });
+          }
+        }
         setEventLogs((prev) => [{ time: new Date().toLocaleTimeString(), msg: data.message, stage: data.stage }, ...prev.slice(0, 49)]);
       } catch {}
     });
@@ -156,6 +191,7 @@ export default function CampaignDetail() {
         });
         // Reset find-more loading states
         setFindMoreLoading({});
+        setActiveSearch(null);
         fetchLeads();
         fetchCampaign();
       } catch {}
@@ -166,6 +202,7 @@ export default function CampaignDetail() {
         const data = JSON.parse((e as any).data || "{}");
         toast.error(data.message || "Pipeline error");
         setFindMoreLoading({});
+        setActiveSearch(null);
       } catch {}
     });
 
@@ -179,6 +216,7 @@ export default function CampaignDetail() {
   // ── Handlers ──────────────────────────────────────────────────────────────
 
   const isRunning = campaign?.status === "running";
+  const searchLocked = isRunning || generatingQuery || Object.values(findMoreLoading).some(Boolean);
 
   const handleStatusChange = async (leadId: string, newStatus: Lead["status"]) => {
     try {
@@ -236,8 +274,10 @@ export default function CampaignDetail() {
 
   // Find more leads for a given objective index
   const handleFindMore = async (objectiveIndex: number) => {
-    if (isRunning) return;
-    setFindMoreLoading((prev) => ({ ...prev, [objectiveIndex]: true }));
+    if (searchLocked) return;
+    const objective = campaign?.searchObjectives?.[objectiveIndex]?.objective || "";
+    setActiveSearch({ index: objectiveIndex, objective });
+    setFindMoreLoading({ [objectiveIndex]: true });
     try {
       await apiRequest(`/campaigns/${id}/queries/${objectiveIndex}/find-more`, { method: "POST" });
       toast.info(`Finding more leads for Search ${objectiveIndex + 1}…`);
@@ -245,7 +285,8 @@ export default function CampaignDetail() {
       setTimeout(fetchLeads, 15000);
     } catch (err: any) {
       toast.error(err.message || "Failed to find more leads");
-      setFindMoreLoading((prev) => ({ ...prev, [objectiveIndex]: false }));
+      setFindMoreLoading({});
+      setActiveSearch(null);
     }
   };
 
@@ -253,7 +294,16 @@ export default function CampaignDetail() {
   const openEditQuery = (index: number) => {
     const obj = campaign?.searchObjectives?.[index];
     if (!obj) return;
-    setEditQueryModal({ open: true, index, text: obj.objective, rationale: (obj as any).rationale || "" });
+    setEditQueryModal({
+      open: true,
+      index,
+      text: obj.objective,
+      rationale: (obj as any).rationale || "",
+      domain: (obj as any).domain || "",
+      queries: (obj as any).queries || [],
+      country: (obj as any).country || campaign?.filters?.country || "IN",
+      city: (obj as any).city || campaign?.filters?.city || ""
+    });
     setRerunAfterEdit(false);
   };
 
@@ -264,7 +314,14 @@ export default function CampaignDetail() {
     try {
       await apiRequest(`/campaigns/${id}/queries/${editQueryModal.index}`, {
         method: "PUT",
-        body: JSON.stringify({ objective: editQueryModal.text, rationale: editQueryModal.rationale })
+        body: JSON.stringify({
+          objective: editQueryModal.text,
+          rationale: editQueryModal.rationale,
+          domain: editQueryModal.domain,
+          queries: editQueryModal.queries,
+          country: editQueryModal.country,
+          city: editQueryModal.city
+        })
       });
       await fetchCampaign();
       toast.success("Query updated!");
@@ -283,16 +340,136 @@ export default function CampaignDetail() {
   };
 
   // Rerun a specific query
+  const handleEnhanceQuery = async () => {
+    if (!editQueryModal) return;
+    setEnhancingQuery(true);
+    try {
+      const res = await apiRequest<{ objective: { domain?: string; objective: string; rationale: string; queries?: string[] } }>(
+        `/campaigns/${id}/queries/enhance`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            objective: editQueryModal.text,
+            rationale: editQueryModal.rationale,
+            domain: editQueryModal.domain,
+            country: editQueryModal.country,
+            city: editQueryModal.city
+          })
+        }
+      );
+      setEditQueryModal({
+        ...editQueryModal,
+        text: res.objective.objective,
+        rationale: res.objective.rationale || editQueryModal.rationale,
+        domain: res.objective.domain || editQueryModal.domain,
+        queries: res.objective.queries || editQueryModal.queries
+      });
+      toast.success("Query enhanced. Review it, then save.");
+    } catch (err: any) {
+      toast.error(err.message || "Could not enhance this query");
+    } finally {
+      setEnhancingQuery(false);
+    }
+  };
+
+  const openDraftModal = () => {
+    if (searchLocked) return;
+    setDraftModal({
+      country: campaign?.filters?.country || "IN",
+      city: campaign?.filters?.city || "",
+      domain: campaign?.filters?.domains?.[0] || "",
+      focus: "",
+      objective: "",
+      rationale: "",
+      queries: [],
+      ready: false
+    });
+  };
+
+  const handleDraftQuery = async () => {
+    if (!draftModal) return;
+    setGeneratingQuery(true);
+    try {
+      const res = await apiRequest<{ objective: { domain?: string; objective: string; rationale: string; queries?: string[]; country?: string; city?: string } }>(
+        `/campaigns/${id}/queries/draft`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            country: draftModal.country,
+            city: draftModal.city,
+            domain: draftModal.domain,
+            focus: draftModal.focus
+          })
+        }
+      );
+      setDraftModal({
+        ...draftModal,
+        domain: res.objective.domain || draftModal.domain,
+        objective: res.objective.objective,
+        rationale: res.objective.rationale || "",
+        queries: res.objective.queries || [],
+        country: res.objective.country || draftModal.country,
+        city: res.objective.city || draftModal.city,
+        ready: true
+      });
+    } catch (err: any) {
+      toast.error(err.message || "Could not draft a query");
+    } finally {
+      setGeneratingQuery(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    if (!draftModal?.objective.trim()) return;
+    setGeneratingQuery(true);
+    try {
+      await apiRequest(`/campaigns/${id}/queries`, {
+        method: "POST",
+        body: JSON.stringify({
+          domain: draftModal.domain,
+          objective: draftModal.objective,
+          rationale: draftModal.rationale,
+          queries: draftModal.queries,
+          country: draftModal.country,
+          city: draftModal.city
+        })
+      });
+      await fetchCampaign();
+      setDraftModal(null);
+      toast.success("Query added. Use Find More Leads when you want to search it.");
+    } catch (err: any) {
+      toast.error(err.message || "Could not save this query");
+    } finally {
+      setGeneratingQuery(false);
+    }
+  };
+
+  const handleDeleteQuery = async (objectiveIndex: number) => {
+    if (searchLocked) return;
+    const label = campaign?.searchObjectives?.[objectiveIndex]?.objective || `Search ${objectiveIndex + 1}`;
+    if (!window.confirm(`Delete this query and its leads?\n\n${label}`)) return;
+    try {
+      await apiRequest(`/campaigns/${id}/queries/${objectiveIndex}`, { method: "DELETE" });
+      await Promise.all([fetchCampaign(), fetchLeads()]);
+      toast.success("Query deleted");
+    } catch (err: any) {
+      toast.error(err.message || "Could not delete this query");
+    }
+  };
+
   const handleRerunQuery = async (objectiveIndex: number) => {
-    if (isRunning) return;
-    setFindMoreLoading((prev) => ({ ...prev, [objectiveIndex]: true }));
+    if (searchLocked) return;
+    const objective = campaign?.searchObjectives?.[objectiveIndex]?.objective || "";
+    setActiveSearch({ index: objectiveIndex, objective });
+    setFindMoreLoading({ [objectiveIndex]: true });
     try {
       await apiRequest(`/campaigns/${id}/queries/${objectiveIndex}/rerun`, { method: "POST" });
       toast.info(`Re-running Search ${objectiveIndex + 1}…`);
       setTimeout(fetchLeads, 20000);
     } catch (err: any) {
       toast.error(err.message || "Failed to rerun query");
-      setFindMoreLoading((prev) => ({ ...prev, [objectiveIndex]: false }));
+      setFindMoreLoading({});
+      setActiveSearch(null);
     }
   };
 
@@ -466,6 +643,9 @@ export default function CampaignDetail() {
             {(obj as any)?.domain && (
               <Badge variant="secondary" className="text-[10px] flex-shrink-0">{(obj as any).domain}</Badge>
             )}
+            <Badge variant="outline" className="text-[10px] flex-shrink-0">
+              {(obj as any)?.city ? `${(obj as any).city}, ` : ""}{countryLabel((obj as any)?.country || campaign?.filters?.country || "IN")}
+            </Badge>
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -475,7 +655,7 @@ export default function CampaignDetail() {
               size="sm"
               className="h-7 text-xs gap-1.5 text-slate-600 hover:text-slate-900"
               onClick={() => openEditQuery(objectiveIndex)}
-              disabled={isRunning || isFindingMore}
+              disabled={searchLocked}
             >
               <Edit3 className="h-3.5 w-3.5" />
               Edit Query
@@ -487,7 +667,7 @@ export default function CampaignDetail() {
               size="sm"
               className="h-7 text-xs gap-1.5 text-slate-600 hover:text-slate-900"
               onClick={() => handleRerunQuery(objectiveIndex)}
-              disabled={isRunning || isFindingMore}
+              disabled={searchLocked}
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isFindingMore ? "animate-spin" : ""}`} />
               Rerun
@@ -499,7 +679,7 @@ export default function CampaignDetail() {
               size="sm"
               className="h-7 text-xs gap-1.5 border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-900 dark:text-blue-300 dark:hover:bg-blue-950/40"
               onClick={() => handleFindMore(objectiveIndex)}
-              disabled={isRunning || isFindingMore}
+              disabled={searchLocked}
             >
               {isFindingMore ? (
                 <>
@@ -512,6 +692,17 @@ export default function CampaignDetail() {
                   Find More Leads
                 </>
               )}
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs gap-1.5 text-rose-600 hover:text-rose-700"
+              onClick={() => handleDeleteQuery(objectiveIndex)}
+              disabled={searchLocked}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete
             </Button>
           </div>
         </div>
@@ -589,6 +780,14 @@ export default function CampaignDetail() {
           </div>
           <span className="text-xs text-slate-500 dark:text-slate-400">{campaign?.progress?.message || "Pipeline inactive"}</span>
         </div>
+        {activeSearch && (
+          <div className="px-4 py-2 border-b border-blue-100 dark:border-blue-900 bg-blue-50/80 dark:bg-blue-950/40 text-sm text-blue-800 dark:text-blue-200 flex items-center gap-2">
+            <Clock className="h-4 w-4 animate-spin shrink-0" />
+            <span>
+              Currently finding leads for query {activeSearch.index + 1}: {activeSearch.objective}
+            </span>
+          </div>
+        )}
         <div className="p-4">
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             {stages.map((stg, idx) => {
@@ -645,7 +844,6 @@ export default function CampaignDetail() {
             { label: "Entity Search", value: campaign.stats.apiCalls.parallelEntity },
             { label: "FindAll", value: campaign.stats.apiCalls.parallelFindAll },
             { label: "Search", value: campaign.stats.apiCalls.parallelSearch },
-            { label: "Extract", value: campaign.stats.apiCalls.parallelExtract },
             { label: "Task", value: campaign.stats.apiCalls.parallelTask },
             { label: "Monitor", value: campaign.stats.apiCalls.parallelMonitor }
           ].map((item) => (
@@ -726,6 +924,12 @@ export default function CampaignDetail() {
       {/* ── VIEW: Grouped by Search Query ─────────────────────────────────── */}
       {viewMode === "grouped" && (
         <div className="space-y-4">
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={openDraftModal} disabled={searchLocked}>
+              <Sparkles className={`h-3.5 w-3.5 ${generatingQuery ? "animate-spin" : ""}`} />
+              Generate query from this campaign
+            </Button>
+          </div>
           {isLoading ? (
             <div className="text-center py-12 text-slate-500">
               <Clock className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-600" />
@@ -763,7 +967,7 @@ export default function CampaignDetail() {
                                     variant="outline"
                                     className="mt-1 text-xs gap-1.5 border-blue-200 text-blue-700 hover:bg-blue-50"
                                     onClick={() => handleFindMore(objIdx)}
-                                    disabled={isRunning || findMoreLoading[objIdx]}
+                                    disabled={searchLocked}
                                   >
                                     <PlusCircle className="h-3.5 w-3.5" />
                                     {findMoreLoading[objIdx] ? "Searching..." : "Find Leads Now"}
@@ -900,6 +1104,116 @@ export default function CampaignDetail() {
         </div>
       )}
 
+      {draftModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">New search query</h3>
+              <button type="button" onClick={() => setDraftModal(null)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">
+                <X className="h-4 w-4 text-slate-400" />
+              </button>
+            </div>
+            <div className="px-6 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
+              <p className="text-xs text-slate-500">Set the location and focus first. The draft is shown here so you can edit it before it is added.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Country</label>
+                  <select
+                    value={draftModal.country}
+                    onChange={(e) => setDraftModal({ ...draftModal, country: e.target.value, ready: false })}
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 px-3 py-2 text-sm"
+                  >
+                    {QUERY_COUNTRIES.map((item) => (
+                      <option key={item.code} value={item.code}>{item.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">City</label>
+                  <input
+                    value={draftModal.city}
+                    onChange={(e) => setDraftModal({ ...draftModal, city: e.target.value, ready: false })}
+                    placeholder="Optional"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Industry label</label>
+                <input
+                  value={draftModal.domain}
+                  onChange={(e) => setDraftModal({ ...draftModal, domain: e.target.value, ready: false })}
+                  placeholder="e.g. Fintech"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">What should this search focus on?</label>
+                <textarea
+                  rows={3}
+                  value={draftModal.focus}
+                  onChange={(e) => setDraftModal({ ...draftModal, focus: e.target.value, ready: false })}
+                  placeholder="e.g. banks replacing manual loan-file review"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 p-3 text-sm"
+                />
+              </div>
+              {draftModal.ready && (
+                <div className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Search sentence</label>
+                    <textarea
+                      rows={3}
+                      value={draftModal.objective}
+                      onChange={(e) => setDraftModal({ ...draftModal, objective: e.target.value })}
+                      className="w-full rounded-lg border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 p-3 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Keyword queries</label>
+                    <div className="space-y-1.5">
+                      {draftModal.queries.map((query, queryIndex) => (
+                        <input
+                          key={queryIndex}
+                          value={query}
+                          onChange={(e) => {
+                            const queries = [...draftModal.queries];
+                            queries[queryIndex] = e.target.value;
+                            setDraftModal({ ...draftModal, queries });
+                          }}
+                          className="w-full rounded-lg border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 px-3 py-2 text-sm"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Why this angle</label>
+                    <input
+                      value={draftModal.rationale}
+                      onChange={(e) => setDraftModal({ ...draftModal, rationale: e.target.value })}
+                      className="w-full rounded-lg border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 px-3 py-2 text-sm"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200 dark:border-slate-800">
+              <Button variant="ghost" onClick={() => setDraftModal(null)} disabled={generatingQuery}>Cancel</Button>
+              {!draftModal.ready ? (
+                <Button onClick={handleDraftQuery} disabled={generatingQuery} className="gap-2">
+                  {generatingQuery ? <Clock className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  Generate draft
+                </Button>
+              ) : (
+                <Button onClick={handleSaveDraft} disabled={generatingQuery || draftModal.objective.trim().length < 5} className="gap-2">
+                  {generatingQuery ? <Clock className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  Add query
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Edit Query Modal ───────────────────────────────────────────────── */}
       {editQueryModal?.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
@@ -909,6 +1223,10 @@ export default function CampaignDetail() {
                 <Edit3 className="h-4 w-4 text-blue-600" />
                 <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">Edit Search Query #{editQueryModal.index + 1}</h3>
               </div>
+              <button type="button" onClick={() => handleEnhanceQuery()} disabled={enhancingQuery || editQuerySaving} className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-50 disabled:opacity-50">
+                <Sparkles className={`h-3.5 w-3.5 ${enhancingQuery ? "animate-spin" : ""}`} />
+                Enhance with AI
+              </button>
               <button type="button" onClick={() => setEditQueryModal(null)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                 <X className="h-4 w-4 text-slate-400" />
               </button>
@@ -924,6 +1242,49 @@ export default function CampaignDetail() {
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Target country</label>
+                  <select
+                    value={editQueryModal.country}
+                    onChange={(e) => setEditQueryModal({ ...editQueryModal, country: e.target.value })}
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 px-3 py-2 text-sm"
+                  >
+                    {QUERY_COUNTRIES.map((item) => (
+                      <option key={item.code} value={item.code}>{item.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">City (optional)</label>
+                  <input
+                    value={editQueryModal.city}
+                    onChange={(e) => setEditQueryModal({ ...editQueryModal, city: e.target.value })}
+                    placeholder="e.g. Bengaluru"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-500">Changing the location starts a fresh search for this query. Earlier companies stay in the list.</p>
+              {editQueryModal.queries.length > 0 && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Keyword queries</label>
+                  <div className="space-y-1.5">
+                    {editQueryModal.queries.map((query, queryIndex) => (
+                      <input
+                        key={queryIndex}
+                        value={query}
+                        onChange={(e) => {
+                          const queries = [...editQueryModal.queries];
+                          queries[queryIndex] = e.target.value;
+                          setEditQueryModal({ ...editQueryModal, queries });
+                        }}
+                        className="w-full rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 px-3 py-2 text-sm"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Rationale (optional)</label>
                 <input
@@ -941,7 +1302,7 @@ export default function CampaignDetail() {
                   onChange={(e) => setRerunAfterEdit(e.target.checked)}
                   className="rounded border-slate-300"
                 />
-                <span className="text-sm text-slate-700 dark:text-slate-300">Find leads immediately after saving</span>
+                <span className="text-sm text-slate-700 dark:text-slate-300">Save and find leads in this location</span>
               </label>
             </div>
             <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
@@ -1064,41 +1425,6 @@ export default function CampaignDetail() {
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {/* Parallel Extract API Data */}
-              {(selectedLead.websiteExtract?.excerpts?.length || selectedLead.extractedSummary) && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                      <Layers className="h-4 w-4 text-purple-600" /> From their website
-                    </h3>
-                    {selectedLead.websiteExtract?.url && (
-                      <a
-                        href={selectedLead.websiteExtract.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[11px] text-blue-600 hover:underline inline-flex items-center gap-1"
-                      >
-                        {selectedLead.websiteExtract.title || "Open page"}
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    )}
-                  </div>
-                  {selectedLead.websiteExtract?.excerpts?.length ? (
-                    <div className="space-y-2">
-                      {selectedLead.websiteExtract.excerpts.map((excerpt, idx) => (
-                        <div key={idx} className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3">
-                          <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{excerpt}</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3">
-                      <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{selectedLead.extractedSummary}</p>
-                    </div>
-                  )}
                 </div>
               )}
 

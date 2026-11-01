@@ -3,6 +3,8 @@ export interface SearchObjective {
   objective: string;
   rationale: string;
   queries?: string[];
+  country?: string;
+  city?: string;
 }
 
 export interface IcpData {

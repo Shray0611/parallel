@@ -5,6 +5,7 @@ import { env } from "../config/env.js";
 import { logger } from "../config/logger.js";
 import { eventBus } from "./eventBus.js";
 import { GeminiService } from "../services/gemini.service.js";
+import { placeLabel } from "../utils/location.js";
 import { ParallelService, FindAllMatch, FindAllMatchCondition } from "../services/parallel.service.js";
 import { isDbConnected } from "../config/db.js";
 import fs from "fs";
@@ -18,13 +19,20 @@ const fixturesData: any[] = JSON.parse(fs.readFileSync(fixturesPath, "utf-8"));
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-function tidyExtractText(value: string): string {
-  return String(value || "")
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-    .replace(/Section Title:\s*/gi, "")
-    .replace(/Content:\s*/gi, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+const activeCampaignJobs = new Set<string>();
+
+export function campaignJobBusy(campaignId: string): boolean {
+  return activeCampaignJobs.has(campaignId);
+}
+
+export function beginCampaignJob(campaignId: string): boolean {
+  if (activeCampaignJobs.has(campaignId)) return false;
+  activeCampaignJobs.add(campaignId);
+  return true;
+}
+
+export function endCampaignJob(campaignId: string): void {
+  activeCampaignJobs.delete(campaignId);
 }
 
 export function extractDomain(urlStr: string): string {
@@ -111,7 +119,7 @@ async function upsertLead(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Utility: Full Research & Enrichment Flow (Extract + Search + Task + Score + Monitor)
+// Utility: Research and score a lead (Search + Task + score + Monitor)
 // ─────────────────────────────────────────────────────────────────────────────
 async function enrichAndScoreLead(
   lead: any,
@@ -119,43 +127,10 @@ async function enrichAndScoreLead(
   campaignId: string
 ): Promise<{ hotCount: number; warmCount: number; coldCount: number }> {
   let hotCount = 0, warmCount = 0, coldCount = 0;
+  const objectiveLocation = campaign.searchObjectives?.[lead.sourceObjectiveIndex];
+  const searchCountry = (objectiveLocation?.country || campaign.filters?.country || "in").toLowerCase();
 
-  // 1. Parallel Extract API: Pull live structured page summary from company website
-  if (lead.website) {
-    try {
-      const extractRes = await ParallelService.extract(
-        [lead.website],
-        `Summarize ${lead.name}'s primary products, target enterprise buyers, and technology stack`
-      );
-      campaign.stats.apiCalls.parallelExtract = (campaign.stats.apiCalls.parallelExtract || 0) + 1;
-      const firstResult = extractRes?.results?.[0];
-      if (firstResult) {
-        const excerpts = (firstResult.excerpts || [])
-          .map((item: string) => tidyExtractText(item))
-          .filter(Boolean)
-          .slice(0, 6);
-        lead.websiteExtract = {
-          url: firstResult.url || lead.website,
-          title: firstResult.title || lead.name,
-          publishDate: firstResult.publish_date || null,
-          excerpts
-        };
-        lead.extractedSummary =
-          excerpts.join("\n\n").slice(0, 2000) ||
-          tidyExtractText(firstResult.summary || firstResult.full_content || firstResult.content || "").slice(0, 2000);
-        if (isDbConnected()) {
-          await Lead.findByIdAndUpdate(lead._id, {
-            extractedSummary: lead.extractedSummary,
-            websiteExtract: lead.websiteExtract
-          });
-        }
-      }
-    } catch (err) {
-      logger.debug({ err, lead: lead.name }, "Extract API skipped or failed (non-fatal)");
-    }
-  }
-
-  // 2. Parallel Search API: Live web search for signals & news
+  // Parallel Search API: live pages for buying signals. Company sites are not scraped.
   try {
     const queryGen = await GeminiService.generateLeadQueries(
       lead.name,
@@ -173,7 +148,7 @@ async function enrichAndScoreLead(
     const searchRes = await ParallelService.search(
       queryGen.objective,
       queryGen.search_queries,
-      campaign.filters?.country || "in",
+      searchCountry,
       companySessionId
     );
     campaign.stats.apiCalls.parallelSearch += 1;
@@ -223,7 +198,6 @@ async function enrichAndScoreLead(
     const searchExcerpts = (lead.enrichment?.results || []).flatMap((r: any) => r.excerpts || []);
     const combinedContext = [
       ...searchExcerpts,
-      lead.extractedSummary ? `Website Extract: ${lead.extractedSummary}` : "",
       lead.taskResearch ? `Research Task Findings: ${lead.taskResearch}` : ""
     ].filter(Boolean);
 
@@ -319,8 +293,16 @@ async function discoverLeadsForObjective(
   matchLimit: number = 10,
   existingRunId?: string,
   onBatch?: (matches: FindAllMatch[], source: "entity" | "findall") => Promise<void> | void,
-  queries: string[] = []
+  queries: string[] = [],
+  maxWaitMs: number = 75_000,
+  location?: { country?: string; city?: string }
 ): Promise<{ matches: FindAllMatch[]; runId: string }> {
+  const country = location?.country || campaign.filters?.country || "";
+  const city = location?.city || "";
+  const place = placeLabel(country, city);
+  const locatedObjective = place
+    ? `${objective} Companies must be based in ${place}.`
+    : objective;
   const focus = queries.filter(Boolean).slice(0, 4);
   const matchConditions: FindAllMatchCondition[] = [
     {
@@ -331,10 +313,10 @@ async function discoverLeadsForObjective(
     }
   ];
 
-  if (campaign.filters?.country) {
+  if (place) {
     matchConditions.push({
       name: "geographic_location_check",
-      description: `Company must operate in or serve customers in ${campaign.filters.country}.`
+      description: `Company must operate in ${place}.`
     });
   }
 
@@ -350,7 +332,7 @@ async function discoverLeadsForObjective(
   // 1. Fast Entity Search — real-time first wave
   if (!existingRunId) {
     try {
-      const res = await ParallelService.entitySearch(objective, matchLimit);
+      const res = await ParallelService.entitySearch(locatedObjective, matchLimit);
       campaign.stats.apiCalls.parallelEntity = (campaign.stats.apiCalls.parallelEntity || 0) + 1;
       entityMatches = res.entities.map((e) => ({
         name: e.name,
@@ -376,11 +358,11 @@ async function discoverLeadsForObjective(
     if (existingRunId) {
       await ParallelService.findAllExtend(existingRunId, matchLimit);
       campaign.stats.apiCalls.parallelFindAll = (campaign.stats.apiCalls.parallelFindAll || 0) + 1;
-      const extended = await ParallelService.findAllPollResults(existingRunId, 120_000);
+      const extended = await ParallelService.findAllPollResults(existingRunId, maxWaitMs);
       findAllMatches = extended.matches || [];
       runId = existingRunId;
     } else {
-      const result = await ParallelService.findAllDiscover(objective, matchConditions, matchLimit, true);
+      const result = await ParallelService.findAllDiscover(locatedObjective, matchConditions, matchLimit, true, maxWaitMs);
       campaign.stats.apiCalls.parallelFindAll = (campaign.stats.apiCalls.parallelFindAll || 0) + 1;
       findAllMatches = result.matches;
       runId = result.runId;
@@ -546,19 +528,19 @@ async function runDemoPipeline(campaign: any): Promise<void> {
   campaign.stats.found = createdLeads.length;
   campaign.stats.apiCalls.parallelEntity = 3;
 
-  // Stage 3: Enrich with Extract & Search
+  // Stage 3: Enrich with Search
   campaign.progress = {
     stage: "enrich",
     current: 3,
     total: 5,
-    message: `Enriching ${createdLeads.length} companies with Extract + Search APIs...`
+    message: `Researching ${createdLeads.length} companies with live search...`
   };
   eventBus.emitProgress({
     campaignId,
     stage: "enrich",
     current: 3,
     total: 5,
-    message: `Extracting site structures & running Parallel Search queries for ${createdLeads.length} companies...`
+    message: `Running live search for buying signals on ${createdLeads.length} companies...`
   });
 
   await sleep(400);
@@ -687,7 +669,8 @@ async function runDemoPipeline(campaign: any): Promise<void> {
 // ─────────────────────────────────────────────────────────────────────────────
 async function runLivePipeline(campaign: any): Promise<void> {
   const campaignId = campaign._id.toString();
-  const limit = pLimit(3);
+  const discoveryLimit = pLimit(1);
+  const enrichLimit = pLimit(1);
 
   // ── Stage 1: ICP & Search Objectives ──────────────────────────────────────
   logger.info({ campaignId }, "Stage 1: Generating ICP and objectives via AI");
@@ -821,13 +804,15 @@ async function runLivePipeline(campaign: any): Promise<void> {
   };
 
   const discoveryTasks = campaign.searchObjectives.map((obj: any, idx: number) =>
-    limit(async () => {
+    discoveryLimit(async () => {
       eventBus.emitProgress({
         campaignId,
         stage: "discover",
         current: 2,
         total: 5,
-        message: `[${idx + 1}/${campaign.searchObjectives.length}] Finding companies: ${obj.objective.slice(0, 80)}...`
+        message: `Finding companies for query ${idx + 1}: ${obj.objective}`,
+        objectiveIndex: idx,
+        objective: obj.objective
       });
 
       const { matches, runId } = await discoverLeadsForObjective(
@@ -846,7 +831,9 @@ async function runLivePipeline(campaign: any): Promise<void> {
             message: `Live leads arriving — ${createdLeads.length} companies found so far...`
           });
         },
-        obj.queries || []
+        obj.queries || [],
+        75_000,
+        { country: obj.country || campaign.filters?.country, city: obj.city || campaign.filters?.city || "" }
       );
 
       if (runId) findallRunIds[idx] = runId;
@@ -868,26 +855,26 @@ async function runLivePipeline(campaign: any): Promise<void> {
 
   logger.info({ campaignId, totalFound: createdLeads.length }, "Stage 2 discovery complete");
 
-  // ── Stage 3 + 4: Extract + Search + Task + Score concurrently per lead ────
-  logger.info({ campaignId, count: createdLeads.length }, "Stage 3+4: Enriching and scoring leads with Extract + Search + Task APIs");
+  // ── Stage 3 + 4: Search + Task + Score, one company at a time ────
+  logger.info({ campaignId, count: createdLeads.length }, "Stage 3+4: Enriching and scoring leads with Search + Task APIs");
   campaign.progress = {
     stage: "enrich",
     current: 3,
     total: 5,
-    message: `Enriching ${createdLeads.length} leads with Extract, Search & Task intelligence (concurrency: 3)...`
+    message: `Researching ${createdLeads.length} companies with live search and task research...`
   };
   eventBus.emitProgress({
     campaignId,
     stage: "enrich",
     current: 3,
     total: 5,
-    message: `Running Parallel Extract, Web Search & Task research for ${createdLeads.length} companies...`
+    message: `Running live search and task research for ${createdLeads.length} companies...`
   });
 
   let totalHot = 0, totalWarm = 0, totalCold = 0;
 
   const enrichScoreTasks = createdLeads.map((lead) =>
-    limit(async () => {
+    enrichLimit(async () => {
       const counts = await enrichAndScoreLead(lead, campaign, campaignId);
       totalHot += counts.hotCount;
       totalWarm += counts.warmCount;
@@ -947,6 +934,25 @@ export async function findMoreLeads(campaignId: string, objectiveIndex: number):
 
   const obj = campaign.searchObjectives[objectiveIndex];
   const existingRunId = campaign.findallRunIds?.[objectiveIndex] || "";
+  const previousStatus = campaign.status;
+
+  campaign.status = "running";
+  campaign.progress = {
+    stage: "discover",
+    current: 2,
+    total: 5,
+    message: `Finding leads for query ${objectiveIndex + 1}: ${obj.objective}`
+  };
+  await saveCampaign(campaign);
+  eventBus.emitProgress({
+    campaignId,
+    stage: "discover",
+    current: 2,
+    total: 5,
+    message: `Finding leads for query ${objectiveIndex + 1}: ${obj.objective}`,
+    objectiveIndex,
+    objective: obj.objective
+  });
 
   logger.info(
     { campaignId, objectiveIndex, objective: obj.objective.slice(0, 80), existingRunId },
@@ -955,6 +961,7 @@ export async function findMoreLeads(campaignId: string, objectiveIndex: number):
 
   const memStore: any[] = isDbConnected() ? [] : (inMemoryLeads.get(campaignId) || []);
   let newLeadsCount = 0;
+  let alreadyKnown = 0;
   const seenDomains = new Set<string>();
 
   const persistFound = async (batch: FindAllMatch[]) => {
@@ -985,19 +992,39 @@ export async function findMoreLeads(campaignId: string, objectiveIndex: number):
         pLimit(1)(async () => {
           await enrichAndScoreLead(lead, campaign, campaignId);
         }).catch((err) => logger.warn({ err }, "Background enrich/score failed for find-more lead"));
+      } else {
+        alreadyKnown++;
       }
     }
   };
 
-  const { matches, runId } = await discoverLeadsForObjective(
-    obj.objective,
-    objectiveIndex,
-    campaign,
-    10,
-    existingRunId || undefined,
-    persistFound,
-    obj.queries || []
-  );
+  let matches: FindAllMatch[] = [];
+  let runId = "";
+  try {
+    const found = await discoverLeadsForObjective(
+      obj.objective,
+      objectiveIndex,
+      campaign,
+      10,
+      existingRunId || undefined,
+      persistFound,
+      obj.queries || [],
+      60_000,
+      { country: obj.country || campaign.filters?.country, city: obj.city || campaign.filters?.city || "" }
+    );
+    matches = found.matches;
+    runId = found.runId;
+  } catch (err: any) {
+    campaign.status = previousStatus === "draft" ? "draft" : "completed";
+    campaign.progress = {
+      stage: "failed",
+      current: 2,
+      total: 5,
+      message: err.message || "Finding leads failed"
+    };
+    await saveCampaign(campaign);
+    throw err;
+  }
 
   if (runId && runId !== existingRunId) {
     if (!campaign.findallRunIds) campaign.findallRunIds = [];
@@ -1012,10 +1039,28 @@ export async function findMoreLeads(campaignId: string, objectiveIndex: number):
   }
 
   campaign.stats.found = (campaign.stats.found || 0) + newLeadsCount;
+  campaign.status = previousStatus === "failed" ? "completed" : previousStatus === "running" ? "completed" : previousStatus || "completed";
+  campaign.progress = {
+    stage: "completed",
+    current: 5,
+    total: 5,
+    message: newLeadsCount
+      ? `Added ${newLeadsCount} new companies for query ${objectiveIndex + 1}.`
+      : `Query ${objectiveIndex + 1} finished. ${alreadyKnown} matching companies were already in this campaign.`
+  };
   await saveCampaign(campaign);
+  eventBus.emitProgress({
+    campaignId,
+    stage: "completed",
+    current: 5,
+    total: 5,
+    message: campaign.progress.message,
+    objectiveIndex,
+    objective: obj.objective
+  });
   eventBus.emitDone({ campaignId, stats: campaign.stats });
 
-  logger.info({ campaignId, objectiveIndex, newLeadsCount }, "Find more leads complete");
+  logger.info({ campaignId, objectiveIndex, newLeadsCount, alreadyKnown }, "Find more leads complete");
   return newLeadsCount;
 }
 

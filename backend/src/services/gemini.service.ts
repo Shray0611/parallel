@@ -4,6 +4,7 @@ import { z } from "zod";
 import { env } from "../config/env.js";
 import { logger } from "../config/logger.js";
 import { cached } from "../utils/cache.js";
+import { placeLabel } from "../utils/location.js";
 
 // Initialize clients
 const groq = new Groq({
@@ -44,6 +45,13 @@ export const icpOutputSchema = z.object({
     )
     .min(1)
     .max(6)
+});
+
+export const objectiveDraftSchema = z.object({
+  domain: z.string(),
+  objective: z.string(),
+  rationale: z.string(),
+  queries: z.array(z.string()).min(2).max(4)
 });
 
 export const leadQueryOutputSchema = z.object({
@@ -376,6 +384,60 @@ Filters:
 
     if (options?.fresh) return run();
     return cached("gemini", cacheKey, run);
+  }
+
+  static async enhanceObjective(input: {
+    offering: string;
+    country: string;
+    city?: string;
+    companySize: string;
+    domains: string[];
+    objective: string;
+    rationale?: string;
+    domain?: string;
+  }) {
+    const place = placeLabel(input.country, input.city);
+    const systemPrompt = `You improve one B2B company-discovery objective for Cerelabs.
+Return JSON: { "domain": string, "objective": string, "rationale": string, "queries": string[3] }.
+The objective is one sentence a company search engine will receive. It must name the industry, the place "${place}", and size "${input.companySize} employees".
+queries are exactly 3 phrases of 3 to 6 words. No company names. No site: operators.
+Make the wording more specific to the offering without changing the industry or the place.`;
+
+    const userPrompt = `Offering: ${input.offering}
+Industries: ${input.domains.join(", ") || "Enterprise"}
+Current domain label: ${input.domain || ""}
+Current objective: ${input.objective}
+Current rationale: ${input.rationale || ""}`;
+
+    return callLLMWithFallback(systemPrompt, userPrompt, objectiveDraftSchema, 0.4);
+  }
+
+  static async generateExtraObjective(input: {
+    offering: string;
+    country: string;
+    city?: string;
+    companySize: string;
+    domains: string[];
+    existing: string[];
+    domain?: string;
+    focus?: string;
+  }) {
+    const place = placeLabel(input.country, input.city);
+    const systemPrompt = `You write one new B2B company-discovery objective for an existing Cerelabs campaign.
+Return JSON: { "domain": string, "objective": string, "rationale": string, "queries": string[3] }.
+The user has already chosen the location and industry. Do not change them.
+Use industry "${input.domain || input.domains[0] || "Enterprise"}".
+The objective must differ from every existing objective. One sentence. Include the place "${place}" and size "${input.companySize} employees".
+queries are exactly 3 phrases of 3 to 6 words. No company names.`;
+
+    const userPrompt = `Offering: ${input.offering}
+Chosen industry: ${input.domain || "choose the best remaining industry"}
+Chosen location: ${place}
+Extra focus from the user: ${input.focus || "None"}
+Existing objectives:
+${input.existing.map((item, index) => `${index + 1}. ${item}`).join("\n") || "None yet"}`;
+
+    return callLLMWithFallback(systemPrompt, userPrompt, objectiveDraftSchema, 0.5);
   }
 
   // Stage 3: Generate search queries for lead enrichment

@@ -35,6 +35,8 @@ import {
   Legend
 } from "recharts";
 
+const SCORE_COLORS = ["#94a3b8", "#64748b", "#f59e0b", "#f97316", "#ef4444"];
+
 interface DashboardSummary {
   totals: {
     campaigns: number;
@@ -48,6 +50,15 @@ interface DashboardSummary {
   topIndustries: Array<{ name: string; count: number }>;
   scoreHistogram: Array<{ range: string; count: number }>;
   recentCampaigns: Campaign[];
+  companies?: Array<{
+    name: string;
+    domain: string;
+    tier: "hot" | "warm" | "cold" | string;
+    score: number;
+    campaignId: string;
+    campaignTitle: string;
+    industry: string;
+  }>;
 }
 
 export default function Dashboard() {
@@ -70,7 +81,9 @@ export default function Dashboard() {
   const totalCampaigns = summary?.totals?.campaigns ?? campaigns.length;
   const totalLeads = summary?.totals?.leads ?? 0;
   const hotLeads = summary?.totals?.hotLeads ?? 0;
+  const warmLeads = summary?.totals?.warmLeads ?? 0;
   const avgScore = summary?.totals?.avgScore ?? 0;
+  const companies = summary?.companies || [];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
@@ -101,7 +114,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -153,6 +166,23 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
+        <Card className="border-amber-200 dark:border-amber-900 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-amber-600">
+              Warm Prospects
+            </CardTitle>
+            <div className="p-2 rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+              <Zap className="h-4 w-4" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-extrabold text-amber-600 dark:text-amber-400">
+              {warmLeads}
+            </div>
+            <p className="text-xs text-slate-500 mt-1">Score 45–69, worth a follow-up</p>
+          </CardContent>
+        </Card>
+
         <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -201,7 +231,11 @@ export default function Dashboard() {
                       fontSize: "12px"
                     }}
                   />
-                  <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Leads" />
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]} name="Leads">
+                    {(summary?.scoreHistogram || []).map((entry, index) => (
+                      <Cell key={entry.range} fill={SCORE_COLORS[index] || "#3b82f6"} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -255,6 +289,45 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {(
+          [
+            { tier: "hot", title: "Hot companies", tone: "text-red-600" },
+            { tier: "warm", title: "Warm companies", tone: "text-amber-600" },
+            { tier: "cold", title: "Cold companies", tone: "text-slate-500" }
+          ] as const
+        ).map((column) => {
+          const rows = companies.filter((company) => company.tier === column.tier);
+          return (
+            <Card key={column.tier} className="border-slate-200 dark:border-slate-800 shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className={`text-base ${column.tone}`}>{column.title}</CardTitle>
+                <CardDescription>{rows.length} companies across your campaigns</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2 max-h-80 overflow-y-auto">
+                {rows.length === 0 ? (
+                  <p className="text-xs text-slate-400">None yet.</p>
+                ) : (
+                  rows.map((company) => (
+                    <Link
+                      key={`${company.campaignId}-${company.domain}`}
+                      to={`/campaigns/${company.campaignId}`}
+                      className="block rounded-lg border border-slate-200 dark:border-slate-800 px-3 py-2 hover:border-blue-300"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">{company.name}</span>
+                        <span className="text-xs font-bold text-slate-500">{company.score}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 truncate">{company.campaignTitle}{company.industry ? ` · ${company.industry}` : ""}</p>
+                    </Link>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Top Target Industries & Recent Campaigns */}

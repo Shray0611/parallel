@@ -99,6 +99,7 @@ export default function CampaignWizard() {
   const [city, setCity] = useState("");
   const [companySize, setCompanySize] = useState<"1-50" | "51-200" | "201-1000" | "1001-5000" | "5000+">("201-1000");
   const [selectedDomains, setSelectedDomains] = useState<string[]>(["Pharmaceuticals", "BFSI"]);
+  const [customDomain, setCustomDomain] = useState("");
 
   const [searchObjectives, setSearchObjectives] = useState<SearchObjective[]>([]);
   const [icp, setIcp] = useState<IcpData | null>(null);
@@ -119,6 +120,15 @@ export default function CampaignWizard() {
 
   const removeValueProp = (tag: string) => {
     setValueProps(valueProps.filter((t) => t !== tag));
+  };
+
+  const addCustomDomain = () => {
+    const label = customDomain.trim();
+    if (!label) return;
+    if (!selectedDomains.some((item) => item.toLowerCase() === label.toLowerCase())) {
+      setSelectedDomains([...selectedDomains, label]);
+    }
+    setCustomDomain("");
   };
 
   const toggleDomain = (domain: string) => {
@@ -213,7 +223,11 @@ export default function CampaignWizard() {
             domains: selectedDomains
           },
           icp: icp || undefined,
-          searchObjectives
+          searchObjectives: searchObjectives.map((item) => ({
+            ...item,
+            country: item.country || country,
+            city: item.city || city.trim()
+          }))
         })
       });
 
@@ -459,8 +473,24 @@ export default function CampaignWizard() {
                 <Label>Target Industry Domains</Label>
                 <span className="text-xs text-slate-500">Select one or more:</span>
               </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Add your own, e.g. Fintech"
+                  value={customDomain}
+                  onChange={(e) => setCustomDomain(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addCustomDomain();
+                    }
+                  }}
+                />
+                <Button type="button" variant="secondary" onClick={addCustomDomain}>
+                  Add
+                </Button>
+              </div>
               <div className="flex flex-wrap gap-2">
-                {SUGGESTED_DOMAINS.map((domain) => {
+                {[...SUGGESTED_DOMAINS, ...selectedDomains.filter((domain) => !SUGGESTED_DOMAINS.includes(domain))].map((domain) => {
                   const isSelected = selectedDomains.includes(domain);
                   return (
                     <button

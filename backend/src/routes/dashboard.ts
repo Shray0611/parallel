@@ -30,14 +30,35 @@ dashboardRouter.get("/summary", requireAuth, async (req: Request, res: Response)
         { range: "61-80", count: 0 },
         { range: "81-100", count: 0 }
       ];
+      const campaignTitles = new Map(userCampaigns.map((item) => [item._id.toString(), item.title]));
+      const companies: Array<{
+        name: string;
+        domain: string;
+        tier: string;
+        score: number;
+        campaignId: string;
+        campaignTitle: string;
+        industry: string;
+      }> = [];
 
       for (const lead of leads) {
         const score = lead.score?.total || 0;
         totalScoreSum += score;
+        const tier = lead.score?.tier || (score >= 70 ? "hot" : score >= 45 ? "warm" : "cold");
 
-        if (lead.score?.tier === "hot" || score >= 70) hot++;
-        else if (lead.score?.tier === "warm" || score >= 45) warm++;
+        if (tier === "hot") hot++;
+        else if (tier === "warm") warm++;
         else cold++;
+
+        companies.push({
+          name: lead.name,
+          domain: lead.domain,
+          tier,
+          score,
+          campaignId: lead.campaignId,
+          campaignTitle: campaignTitles.get(lead.campaignId) || "Campaign",
+          industry: lead.score?.industry || ""
+        });
 
         // Industry aggregation
         const ind = lead.score?.industry || "Enterprise";
@@ -74,7 +95,8 @@ dashboardRouter.get("/summary", requireAuth, async (req: Request, res: Response)
         ],
         topIndustries,
         scoreHistogram: histogram,
-        recentCampaigns: userCampaigns.slice(0, 5)
+        recentCampaigns: userCampaigns.slice(0, 5),
+        companies: companies.sort((a, b) => b.score - a.score).slice(0, 40)
       });
       return;
     } catch (err: any) {
@@ -108,12 +130,33 @@ dashboardRouter.get("/summary", requireAuth, async (req: Request, res: Response)
     { range: "81-100", count: 0 }
   ];
 
+  const campaignTitles = new Map(userCampaigns.map((item) => [String(item._id || item.id), item.title]));
+  const companies: Array<{
+    name: string;
+    domain: string;
+    tier: string;
+    score: number;
+    campaignId: string;
+    campaignTitle: string;
+    industry: string;
+  }> = [];
+
   for (const lead of allLeads) {
     const score = lead.score?.total || 0;
     totalScoreSum += score;
-    if (lead.score?.tier === "hot" || score >= 70) hot++;
-    else if (lead.score?.tier === "warm" || score >= 45) warm++;
+    const tier = lead.score?.tier || (score >= 70 ? "hot" : score >= 45 ? "warm" : "cold");
+    if (tier === "hot") hot++;
+    else if (tier === "warm") warm++;
     else cold++;
+    companies.push({
+      name: lead.name,
+      domain: lead.domain,
+      tier,
+      score,
+      campaignId: lead.campaignId,
+      campaignTitle: campaignTitles.get(String(lead.campaignId)) || "Campaign",
+      industry: lead.score?.industry || ""
+    });
 
     const ind = lead.score?.industry || "Enterprise";
     industryCounts.set(ind, (industryCounts.get(ind) || 0) + 1);
@@ -144,6 +187,7 @@ dashboardRouter.get("/summary", requireAuth, async (req: Request, res: Response)
       .sort((a, b) => b.count - a.count)
       .slice(0, 5),
     scoreHistogram: histogram,
-    recentCampaigns: userCampaigns.slice(0, 5)
+    recentCampaigns: userCampaigns.slice(0, 5),
+    companies: companies.sort((a, b) => b.score - a.score).slice(0, 40)
   });
 });
