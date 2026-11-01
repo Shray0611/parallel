@@ -2,11 +2,13 @@ import { app } from "./app.js";
 import { env } from "./config/env.js";
 import { connectDB } from "./config/db.js";
 import { ensureDemoUser } from "./demo/seedUser.js";
+import { releaseStuckCampaigns } from "./pipeline/runCampaign.js";
 import { logger } from "./config/logger.js";
 
 async function startServer() {
   await connectDB();
   await ensureDemoUser();
+  await releaseStuckCampaigns();
 
   const server = app.listen(env.PORT, () => {
     logger.info(`🚀 Cerelabs LeadScope Backend running on port ${env.PORT} (DEMO_MODE=${env.DEMO_MODE})`);

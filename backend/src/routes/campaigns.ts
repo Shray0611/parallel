@@ -4,7 +4,7 @@ import { z } from "zod";
 import { Campaign } from "../models/Campaign.js";
 import { Lead } from "../models/Lead.js";
 import { requireAuth } from "../middleware/auth.js";
-import { runCampaign, findMoreLeads, rerunObjective, inMemoryCampaigns, inMemoryLeads, beginCampaignJob, endCampaignJob, campaignJobBusy } from "../pipeline/runCampaign.js";
+import { runCampaign, findMoreLeads, rerunObjective, continueObjective, inMemoryCampaigns, inMemoryLeads, beginCampaignJob, endCampaignJob, campaignJobBusy } from "../pipeline/runCampaign.js";
 import { GeminiService } from "../services/gemini.service.js";
 import { eventBus } from "../pipeline/eventBus.js";
 import { isDbConnected } from "../config/db.js";
@@ -31,7 +31,8 @@ const searchObjectiveSchema = z.object({
   rationale: z.string().optional().default(""),
   queries: z.array(z.string()).default([]),
   country: z.string().optional().default(""),
-  city: z.string().optional().default("")
+  city: z.string().optional().default(""),
+  companySize: z.enum(["", "1-50", "51-200", "201-1000", "1001-5000", "5000+"]).optional().default("")
 });
 
 const icpSchema = z.object({
@@ -504,7 +505,7 @@ campaignRouter.post("/:id/queries/:index/find-more", requireAuth, async (req: Re
     res.status(404).json({ error: { message: "Campaign not found", code: "NOT_FOUND" } });
     return;
   }
-  if (campaign.status === "running" || campaignJobBusy(id)) {
+  if (campaignJobBusy(id)) {
     res.status(409).json({ error: { message: "Another query is already being searched. Wait for it to finish.", code: "PIPELINE_RUNNING" } });
     return;
   }
@@ -529,7 +530,7 @@ campaignRouter.post("/:id/queries/:index/find-more", requireAuth, async (req: Re
 campaignRouter.put("/:id/queries/:index", requireAuth, async (req: Request, res: Response): Promise<void> => {
   const id = getParamId(req.params.id);
   const objectiveIndex = parseInt(String(req.params.index), 10);
-  const { objective, rationale, queries, domain, country, city } = req.body;
+  const { objective, rationale, queries, domain, country, city, companySize } = req.body;
   if (!objective || typeof objective !== "string" || objective.trim().length < 5) {
     res.status(400).json({ error: { message: "Objective text is required (min 5 chars)", code: "VALIDATION_ERROR" } });
     return;
@@ -552,6 +553,7 @@ campaignRouter.put("/:id/queries/:index", requireAuth, async (req: Request, res:
     }
     if (typeof country === "string") campaign.searchObjectives[objectiveIndex].country = country.trim();
     if (typeof city === "string") campaign.searchObjectives[objectiveIndex].city = city.trim();
+    if (typeof companySize === "string") campaign.searchObjectives[objectiveIndex].companySize = companySize.trim();
     if ((campaign as any).findallRunIds) (campaign as any).findallRunIds[objectiveIndex] = "";
     await campaign.save();
     res.json({ campaign });
@@ -569,6 +571,7 @@ campaignRouter.put("/:id/queries/:index", requireAuth, async (req: Request, res:
   }
   if (typeof country === "string") campaign.searchObjectives[objectiveIndex].country = country.trim();
   if (typeof city === "string") campaign.searchObjectives[objectiveIndex].city = city.trim();
+  if (typeof companySize === "string") campaign.searchObjectives[objectiveIndex].companySize = companySize.trim();
   if (campaign.findallRunIds) campaign.findallRunIds[objectiveIndex] = "";
   inMemoryCampaigns.set(id, campaign);
   res.json({ campaign });
@@ -752,7 +755,7 @@ campaignRouter.post("/:id/queries/:index/rerun", requireAuth, async (req: Reques
   if (isDbConnected()) { campaign = await Campaign.findById(id); }
   else { campaign = inMemoryCampaigns.get(id); }
   if (!campaign) { res.status(404).json({ error: { message: "Campaign not found", code: "NOT_FOUND" } }); return; }
-  if (campaign.status === "running" || campaignJobBusy(id)) {
+  if (campaignJobBusy(id)) {
     res.status(409).json({ error: { message: "Another query is already being searched. Wait for it to finish.", code: "PIPELINE_RUNNING" } });
     return;
   }
@@ -769,4 +772,49 @@ campaignRouter.post("/:id/queries/:index/rerun", requireAuth, async (req: Reques
       })
       .finally(() => endCampaignJob(id));
   });
+});
+
+function startContinue(id: string, objectiveIndex?: number) {
+  setImmediate(() => {
+    const job = objectiveIndex == null ? runCampaign(id) : continueObjective(id, objectiveIndex);
+    job
+      .catch((err) => {
+        logger.error({ err, campaignId: id, objectiveIndex }, "Continue failed");
+        eventBus.emitError({ campaignId: id, message: err.message || "Continue failed" });
+      })
+      .finally(() => endCampaignJob(id));
+  });
+}
+
+campaignRouter.post("/:id/continue", requireAuth, async (req: Request, res: Response): Promise<void> => {
+  const id = getParamId(req.params.id);
+  if (campaignJobBusy(id)) {
+    res.status(409).json({ error: { message: "Another query is already being searched. Wait for it to finish.", code: "PIPELINE_RUNNING" } });
+    return;
+  }
+  if (!beginCampaignJob(id)) {
+    res.status(409).json({ error: { message: "Another query is already being searched. Wait for it to finish.", code: "PIPELINE_RUNNING" } });
+    return;
+  }
+  res.status(202).json({ message: "Continuing the campaign from the saved companies", campaignId: id });
+  startContinue(id);
+});
+
+campaignRouter.post("/:id/queries/:index/continue", requireAuth, async (req: Request, res: Response): Promise<void> => {
+  const id = getParamId(req.params.id);
+  const objectiveIndex = parseInt(String(req.params.index), 10);
+  if (isNaN(objectiveIndex) || objectiveIndex < 0) {
+    res.status(400).json({ error: { message: "Invalid objective index", code: "INVALID_INDEX" } });
+    return;
+  }
+  if (campaignJobBusy(id)) {
+    res.status(409).json({ error: { message: "Another query is already being searched. Wait for it to finish.", code: "PIPELINE_RUNNING" } });
+    return;
+  }
+  if (!beginCampaignJob(id)) {
+    res.status(409).json({ error: { message: "Another query is already being searched. Wait for it to finish.", code: "PIPELINE_RUNNING" } });
+    return;
+  }
+  res.status(202).json({ message: "Continuing this query", campaignId: id, objectiveIndex });
+  startContinue(id, objectiveIndex);
 });

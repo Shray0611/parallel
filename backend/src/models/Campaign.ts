@@ -33,6 +33,7 @@ export interface ISearchObjective {
   queries?: string[];
   country?: string;
   city?: string;
+  companySize?: string;
 }
 
 export interface IIcp {
@@ -94,7 +95,8 @@ const campaignSchema = new Schema<ICampaign>(
         rationale: { type: String, required: true },
         queries: { type: [String], default: [] },
         country: { type: String, default: "" },
-        city: { type: String, default: "" }
+        city: { type: String, default: "" },
+        companySize: { type: String, default: "" }
       }
     ],
     findallRunIds: { type: [String], default: [] },

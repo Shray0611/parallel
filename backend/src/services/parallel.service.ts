@@ -59,6 +59,7 @@ export interface FindAllMatch {
   name: string;
   url?: string;
   description?: string;
+  matchStatus?: string;
   attributes?: Record<string, any>;
 }
 
@@ -128,6 +129,11 @@ async function parallelFetch(path: string, init: any = {}): Promise<any> {
       errorData?.detail ||
       `Parallel API error ${res.status} on ${path}`;
     logger.error({ status: res.status, errorData, path }, msg);
+    if (res.status === 429) {
+      const rateError = new Error("Parallel rate limit reached. Saved companies stay in the list. Use Continue when the limit clears.");
+      rateError.name = "ParallelRateLimitError";
+      throw rateError;
+    }
     throw new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
   }
 
@@ -167,12 +173,30 @@ function outputFieldValue(value: any): any {
   return value;
 }
 
-function parseFindAllMatches(data: any): FindAllMatch[] {
+function findAllCandidateList(data: any): any[] {
   const candidates = data?.candidates || data?.matches || data?.run?.candidates || [];
-  if (!Array.isArray(candidates)) return [];
+  return Array.isArray(candidates) ? candidates : [];
+}
 
-  return candidates
-    .filter((c: any) => !c?.match_status || c.match_status === "matched")
+function summarizeFindAllCandidates(data: any): { total: number; counts: Record<string, number>; metrics?: any } {
+  const counts: Record<string, number> = {};
+  for (const candidate of findAllCandidateList(data)) {
+    const status = String(candidate?.match_status || "unknown");
+    counts[status] = (counts[status] || 0) + 1;
+  }
+  return {
+    total: findAllCandidateList(data).length,
+    counts,
+    metrics: data?.run?.status?.metrics || data?.status?.metrics
+  };
+}
+
+function parseFindAllMatches(data: any): FindAllMatch[] {
+  const mapped = findAllCandidateList(data)
+    .filter((c: any) => {
+      const status = String(c?.match_status || "");
+      return status !== "unmatched" && status !== "discarded";
+    })
     .map((c: any) => {
       const attributes: Record<string, any> = {};
       if (c.output && typeof c.output === "object") {
@@ -190,10 +214,14 @@ function parseFindAllMatches(data: any): FindAllMatch[] {
         name: c.name || "",
         url: c.url || "",
         description: c.description || "",
+        matchStatus: String(c?.match_status || ""),
         attributes
       } as FindAllMatch;
     })
     .filter((m: FindAllMatch) => Boolean(m.name || m.url));
+
+  const matched = mapped.filter((m) => !m.matchStatus || m.matchStatus === "matched");
+  return matched.length > 0 ? matched : mapped;
 }
 
 function parseTaskOutput(data: any): string {
@@ -292,6 +320,7 @@ export class ParallelService {
 
     let latestMatches: FindAllMatch[] = [];
     let latestStatus = "running";
+    let lastSnapshotLog = "";
 
     while (Date.now() < deadline) {
       const snapshot: any = await parallelFetch(`/v1beta/findall/runs/${runId}/result`, {
@@ -302,6 +331,12 @@ export class ParallelService {
       const snapshotMatches = parseFindAllMatches(snapshot);
       if (snapshotMatches.length > 0) {
         latestMatches = snapshotMatches;
+      }
+      const summary = summarizeFindAllCandidates(snapshot);
+      const snapshotLog = `${latestStatus}:${summary.total}:${latestMatches.length}`;
+      if (snapshotLog !== lastSnapshotLog) {
+        logger.info({ runId, status: latestStatus, kept: latestMatches.length, ...summary }, "FindAll: candidate snapshot");
+        lastSnapshotLog = snapshotLog;
       }
 
       if (latestStatus === "completed" || latestStatus === "cancelled") {
@@ -429,27 +464,40 @@ export class ParallelService {
   // ─────────────────────────────────────────────────────────────────────────
   static async entitySearch(
     objective: string,
-    matchLimit: number = env.ENTITY_MATCH_LIMIT
+    matchLimit: number = env.ENTITY_MATCH_LIMIT,
+    options?: { fresh?: boolean }
   ): Promise<ParallelEntitySearchResponse> {
     const body = {
       entity_type: "companies",
       objective,
-      match_limit: Math.max(5, matchLimit)
+      match_limit: Math.max(5, Math.min(100, matchLimit))
     };
 
-    return cached("parallel_entity", body, async () => {
-      logger.info({ objective: objective.slice(0, 80), matchLimit: body.match_limit }, "Parallel Entity Search (fast path)");
+    const run = async () => {
+      logger.info({ objective: objective.slice(0, 80), matchLimit: body.match_limit, fresh: Boolean(options?.fresh) }, "Parallel Entity Search (fast path)");
 
       const data: any = await parallelFetch("/v1beta/findall/entity-search", {
         method: "POST",
         body: JSON.stringify(body)
       });
 
+      const rawEntities = data.entities || data.results || [];
+      const entities: ParallelEntity[] = (Array.isArray(rawEntities) ? rawEntities : [])
+        .map((entity: any) => ({
+          name: String(entity?.name || entity?.title || "").trim(),
+          url: String(entity?.url || entity?.website || entity?.homepage || "").trim(),
+          description: String(entity?.description || "").trim()
+        }))
+        .filter((entity: ParallelEntity) => Boolean(entity.name || entity.url));
+
       return {
         entity_set_id: data.entity_set_id || "",
-        entities: (data.entities || []) as ParallelEntity[]
+        entities
       };
-    });
+    };
+
+    if (options?.fresh) return run();
+    return cached("parallel_entity", body, run);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -525,7 +573,7 @@ export class ParallelService {
       session_id: sessionId,
       advanced_settings: {
         location,
-        max_results: 5,
+        max_results: 3,
         source_policy: {
           exclude_domains: ["youtube.com", "facebook.com", "instagram.com", "pinterest.com"]
         }

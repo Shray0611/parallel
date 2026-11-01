@@ -5,6 +5,7 @@ export interface SearchObjective {
   queries?: string[];
   country?: string;
   city?: string;
+  companySize?: string;
 }
 
 export interface IcpData {

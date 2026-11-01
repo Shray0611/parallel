@@ -4,6 +4,7 @@ import { z } from "zod";
 import { env } from "../config/env.js";
 import { logger } from "../config/logger.js";
 import { cached } from "../utils/cache.js";
+import { isRateLimitError } from "../utils/errors.js";
 import { placeLabel } from "../utils/location.js";
 
 // Initialize clients
@@ -145,6 +146,7 @@ async function callGroqJson<T>(
       return schema.parse(parsed);
     } catch (err: any) {
       lastError = err;
+      if (isRateLimitError(err)) throw err;
       logger.warn({ model, err: err?.message || err }, "Groq model attempt failed, trying next Groq model");
       continue;
     }
@@ -211,6 +213,7 @@ async function callGeminiInternal<T>(
       }
     } catch (err: any) {
       lastError = err;
+      if (isRateLimitError(err)) throw err;
       logger.warn({ err: err?.message || err, model: modelName }, "Gemini model attempt failed, falling back to alternative model");
       continue;
     }
