@@ -68,14 +68,30 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      apiRequest<DashboardSummary>("/dashboard/summary").catch(() => null),
-      apiRequest<{ campaigns: Campaign[] }>("/campaigns").catch(() => ({ campaigns: [] }))
-    ]).then(([sumData, campData]) => {
-      if (sumData) setSummary(sumData);
-      if (campData?.campaigns) setCampaigns(campData.campaigns);
-      setIsLoading(false);
-    });
+    let active = true;
+    const load = () => {
+      Promise.all([
+        apiRequest<DashboardSummary>("/dashboard/summary").catch(() => null),
+        apiRequest<{ campaigns: Campaign[] }>("/campaigns").catch(() => ({ campaigns: [] }))
+      ]).then(([sumData, campData]) => {
+        if (!active) return;
+        if (sumData) {
+          setSummary(sumData);
+          if (sumData.recentCampaigns?.length) setCampaigns(sumData.recentCampaigns);
+        } else if (campData?.campaigns) {
+          setCampaigns(campData.campaigns);
+        }
+        setIsLoading(false);
+      });
+    };
+    load();
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") load();
+    }, 5000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
   }, []);
 
   const totalCampaigns = summary?.totals?.campaigns ?? campaigns.length;
@@ -416,7 +432,7 @@ export default function Dashboard() {
                       <div className="flex items-center gap-4 flex-shrink-0 text-xs">
                         <div className="text-right">
                           <span className="font-bold text-slate-900 dark:text-slate-100">
-                            {camp.stats?.scored || camp.stats?.found || 0}
+                            {(camp as Campaign & { leadCount?: number }).leadCount ?? camp.stats?.found ?? 0}
                           </span>
                           <span className="text-slate-400 ml-1">leads</span>
                           {camp.stats?.hot > 0 && (

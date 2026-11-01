@@ -7,6 +7,38 @@ import { inMemoryCampaigns, inMemoryLeads } from "../pipeline/runCampaign.js";
 
 export const dashboardRouter = Router();
 
+function campaignsWithLiveCounts(campaigns: any[], leads: any[]) {
+  const counts = new Map<string, { total: number; hot: number; warm: number; cold: number; scored: number }>();
+  for (const lead of leads) {
+    const id = String(lead.campaignId);
+    const row = counts.get(id) || { total: 0, hot: 0, warm: 0, cold: 0, scored: 0 };
+    const score = lead.score?.total || 0;
+    const tier = lead.score?.tier || (score >= 70 ? "hot" : score >= 45 ? "warm" : "cold");
+    row.total += 1;
+    if (lead.score?.total != null) row.scored += 1;
+    if (tier === "hot") row.hot += 1;
+    else if (tier === "warm") row.warm += 1;
+    else row.cold += 1;
+    counts.set(id, row);
+  }
+
+  return campaigns.map((campaign) => {
+    const plain = typeof campaign.toObject === "function" ? campaign.toObject() : { ...campaign };
+    const id = String(plain._id || plain.id);
+    const row = counts.get(id) || { total: 0, hot: 0, warm: 0, cold: 0, scored: 0 };
+    plain.leadCount = row.total;
+    plain.stats = {
+      ...(plain.stats || {}),
+      found: row.total,
+      scored: row.scored,
+      hot: row.hot,
+      warm: row.warm,
+      cold: row.cold
+    };
+    return plain;
+  });
+}
+
 // GET /api/dashboard/summary
 dashboardRouter.get("/summary", requireAuth, async (req: Request, res: Response): Promise<void> => {
   const userId = req.user!.id;
@@ -95,7 +127,7 @@ dashboardRouter.get("/summary", requireAuth, async (req: Request, res: Response)
         ],
         topIndustries,
         scoreHistogram: histogram,
-        recentCampaigns: userCampaigns.slice(0, 5),
+        recentCampaigns: campaignsWithLiveCounts(userCampaigns, leads).slice(0, 5),
         companies: companies.sort((a, b) => b.score - a.score).slice(0, 40)
       });
       return;
@@ -187,7 +219,7 @@ dashboardRouter.get("/summary", requireAuth, async (req: Request, res: Response)
       .sort((a, b) => b.count - a.count)
       .slice(0, 5),
     scoreHistogram: histogram,
-    recentCampaigns: userCampaigns.slice(0, 5),
+    recentCampaigns: campaignsWithLiveCounts(userCampaigns, allLeads).slice(0, 5),
     companies: companies.sort((a, b) => b.score - a.score).slice(0, 40)
   });
 });

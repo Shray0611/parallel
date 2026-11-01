@@ -93,6 +93,7 @@ export default function CampaignDetail() {
   const [draftModal, setDraftModal] = useState<{
     country: string;
     city: string;
+    companySize: string;
     domain: string;
     focus: string;
     objective: string;
@@ -417,6 +418,7 @@ export default function CampaignDetail() {
     setDraftModal({
       country: campaign?.filters?.country || "IN",
       city: campaign?.filters?.city || "",
+      companySize: campaign?.filters?.companySize || "201-1000",
       domain: campaign?.filters?.domains?.[0] || "",
       focus: "",
       objective: "",
@@ -430,13 +432,14 @@ export default function CampaignDetail() {
     if (!draftModal) return;
     setGeneratingQuery(true);
     try {
-      const res = await apiRequest<{ objective: { domain?: string; objective: string; rationale: string; queries?: string[]; country?: string; city?: string } }>(
+      const res = await apiRequest<{ objective: { domain?: string; objective: string; rationale: string; queries?: string[]; country?: string; city?: string; companySize?: string } }>(
         `/campaigns/${id}/queries/draft`,
         {
           method: "POST",
           body: JSON.stringify({
             country: draftModal.country,
             city: draftModal.city,
+            companySize: draftModal.companySize,
             domain: draftModal.domain,
             focus: draftModal.focus
           })
@@ -450,6 +453,7 @@ export default function CampaignDetail() {
         queries: res.objective.queries || [],
         country: res.objective.country || draftModal.country,
         city: res.objective.city || draftModal.city,
+        companySize: res.objective.companySize || draftModal.companySize,
         ready: true
       });
     } catch (err: any) {
@@ -471,7 +475,8 @@ export default function CampaignDetail() {
           rationale: draftModal.rationale,
           queries: draftModal.queries,
           country: draftModal.country,
-          city: draftModal.city
+          city: draftModal.city,
+          companySize: draftModal.companySize
         })
       });
       await fetchCampaign();
@@ -864,8 +869,8 @@ export default function CampaignDetail() {
       </div>
 
       {/* Pipeline Stepper */}
-      <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="p-4 bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <Card className="pipeline-bright border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="pipeline-head p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <span className="text-sm font-semibold">Live Intelligence Pipeline</span>
@@ -893,12 +898,8 @@ export default function CampaignDetail() {
               return (
                 <div
                   key={stg.key}
-                  className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs font-medium transition-all ${
-                    isPast
-                      ? "border-emerald-200 bg-emerald-50/60 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
-                      : isCurrent
-                      ? "border-blue-600 bg-blue-50/80 text-blue-700 dark:border-blue-700 dark:bg-blue-950/60 dark:text-blue-300 animate-pulse"
-                      : "border-slate-200 text-slate-400 dark:border-slate-800"
+                  className={`pipeline-step flex items-center gap-2 p-2.5 rounded-lg border text-xs font-medium transition-all ${
+                    isPast ? "is-done" : isCurrent ? "is-current" : ""
                   }`}
                 >
                   {isPast ? (
@@ -933,37 +934,20 @@ export default function CampaignDetail() {
         </div>
       </Card>
 
-      {/* Parallel API usage */}
-      {campaign?.stats?.apiCalls && (
-        <div className="flex flex-wrap items-center gap-2 text-[11px]">
-          <span className="font-semibold text-slate-500 uppercase tracking-wide mr-1">Parallel APIs</span>
-          {[
-            { label: "Entity Search", value: campaign.stats.apiCalls.parallelEntity },
-            { label: "FindAll", value: campaign.stats.apiCalls.parallelFindAll },
-            { label: "Search", value: campaign.stats.apiCalls.parallelSearch },
-            { label: "Task", value: campaign.stats.apiCalls.parallelTask },
-            { label: "Monitor", value: campaign.stats.apiCalls.parallelMonitor }
-          ].map((item) => (
-            <Badge key={item.label} variant="outline" className="text-[10px] font-medium">
-              {item.label} {item.value || 0}
-            </Badge>
-          ))}
-        </div>
-      )}
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="pipeline-bright grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { label: "Found Leads", value: campaign?.stats?.found || leads.length, color: "" },
-          { label: "Enriched", value: campaign?.stats?.enriched || leads.filter((l) => l.enrichment).length, color: "" },
-          { label: "Scored", value: campaign?.stats?.scored || leads.filter((l) => l.score).length, color: "" },
-          { label: "🔥 Hot (≥70)", value: campaign?.stats?.hot || leads.filter((l) => l.score?.tier === "hot").length, color: "border-red-200 bg-red-50/40 dark:border-red-950 dark:bg-red-950/20 text-red-700 dark:text-red-400" },
-          { label: "⚡ Warm (45-69)", value: campaign?.stats?.warm || leads.filter((l) => l.score?.tier === "warm").length, color: "border-amber-200 bg-amber-50/40 dark:border-amber-950 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400" },
-          { label: "Cold (<45)", value: campaign?.stats?.cold || leads.filter((l) => l.score?.tier === "cold").length, color: "" }
+          { label: "Found Leads", value: campaign?.stats?.found || leads.length, tone: "" },
+          { label: "Enriched", value: campaign?.stats?.enriched || leads.filter((l) => l.enrichment).length, tone: "" },
+          { label: "Scored", value: campaign?.stats?.scored || leads.filter((l) => l.score).length, tone: "" },
+          { label: "Hot (≥70)", value: campaign?.stats?.hot || leads.filter((l) => l.score?.tier === "hot").length, tone: "pipeline-stat-hot" },
+          { label: "Warm (45-69)", value: campaign?.stats?.warm || leads.filter((l) => l.score?.tier === "warm").length, tone: "pipeline-stat-warm" },
+          { label: "Cold (<45)", value: campaign?.stats?.cold || leads.filter((l) => l.score?.tier === "cold").length, tone: "pipeline-stat-cold" }
         ].map((stat) => (
-          <div key={stat.label} className={`p-3 rounded-lg border ${stat.color || "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"}`}>
-            <span className={`text-xs font-medium ${stat.color ? "" : "text-slate-500"}`}>{stat.label}</span>
-            <div className="text-xl font-bold mt-1">{stat.value}</div>
+          <div key={stat.label} className={`pipeline-stat p-3 rounded-lg border ${stat.tone}`}>
+            <span className="pipeline-stat-label text-xs font-medium">{stat.label}</span>
+            <div className="pipeline-stat-value text-xl font-bold mt-1">{stat.value}</div>
           </div>
         ))}
       </div>
@@ -1201,9 +1185,9 @@ export default function CampaignDetail() {
         </div>
       )}
 
-      {draftModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+      {draftModal && createPortal(
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.72)" }}>
+          <div className="query-editor w-full max-w-xl overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
               <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">New search query</h3>
               <button type="button" onClick={() => setDraftModal(null)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">
@@ -1234,6 +1218,18 @@ export default function CampaignDetail() {
                     className="w-full rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 px-3 py-2 text-sm"
                   />
                 </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Company size</label>
+                <select
+                  value={draftModal.companySize}
+                  onChange={(e) => setDraftModal({ ...draftModal, companySize: e.target.value, ready: false })}
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 px-3 py-2 text-sm"
+                >
+                  {COMPANY_SIZES.map((size) => (
+                    <option key={size} value={size}>{size} employees</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Industry label</label>
@@ -1308,13 +1304,14 @@ export default function CampaignDetail() {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── Edit Query Modal ───────────────────────────────────────────────── */}
-      {editQueryModal?.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+      {editQueryModal?.open && createPortal(
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.72)" }}>
+          <div className="query-editor w-full max-w-xl overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <Edit3 className="h-4 w-4 text-blue-600" />
@@ -1328,7 +1325,7 @@ export default function CampaignDetail() {
                 <X className="h-4 w-4 text-slate-400" />
               </button>
             </div>
-            <div className="px-6 py-4 space-y-4">
+            <div className="query-editor-body px-6 py-4 space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Search Objective</label>
                 <textarea
@@ -1421,7 +1418,8 @@ export default function CampaignDetail() {
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── Lead Detail Slide-Over ─────────────────────────────────────────── */}

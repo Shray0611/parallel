@@ -364,6 +364,124 @@
   color: inherit;
 }
 
+.dashboard-theme .pipeline-bright.rounded-xl,
+.dashboard-theme .pipeline-bright {
+  background: #343434 !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #f7f3ee !important;
+}
+
+.dashboard-theme .pipeline-bright .pipeline-head {
+  background: #3c3c3c !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.dashboard-theme .pipeline-bright .pipeline-head span,
+.dashboard-theme .pipeline-bright .pipeline-head svg,
+.dashboard-theme .pipeline-bright .pipeline-apis,
+.dashboard-theme .pipeline-bright .pipeline-apis * {
+  color: #f4f1ec !important;
+}
+
+.dashboard-theme .pipeline-bright .pipeline-step {
+  background: #4a4a4a !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+.dashboard-theme .pipeline-bright .pipeline-step span,
+.dashboard-theme .pipeline-bright .pipeline-step svg {
+  color: #ffffff !important;
+}
+
+.dashboard-theme .pipeline-bright .pipeline-step.is-done {
+  background: #2f6b52 !important;
+  border-color: #8ee0bc !important;
+}
+
+.dashboard-theme .pipeline-bright .pipeline-step.is-done span,
+.dashboard-theme .pipeline-bright .pipeline-step.is-done svg {
+  color: #e9fff4 !important;
+}
+
+.dashboard-theme .pipeline-bright .pipeline-step.is-current {
+  background: #8f3d32 !important;
+  border-color: #ffc7ba !important;
+}
+
+.dashboard-theme .pipeline-bright .pipeline-step.is-current span,
+.dashboard-theme .pipeline-bright .pipeline-step.is-current svg {
+  color: #fff4f1 !important;
+}
+
+.dashboard-theme .pipeline-stat {
+  background: #3e3e3e !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+.dashboard-theme .pipeline-stat .pipeline-stat-label,
+.dashboard-theme .pipeline-stat .pipeline-stat-value {
+  color: #ffffff !important;
+}
+
+.dashboard-theme .pipeline-stat-hot {
+  background: #7a3b32 !important;
+  border-color: #ffc2b6 !important;
+}
+
+.dashboard-theme .pipeline-stat-warm {
+  background: #7a6232 !important;
+  border-color: #ffe0a6 !important;
+}
+
+.dashboard-theme .pipeline-stat-cold {
+  background: #4d4d4d !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+.query-editor {
+  background: #161616 !important;
+  color: #f4f1ec !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 16px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+}
+
+.query-editor h3,
+.query-editor label,
+.query-editor p,
+.query-editor span,
+.dashboard-theme .query-editor [class*="text-"] {
+  color: #f4f1ec !important;
+}
+
+.query-editor-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.query-editor input,
+.query-editor textarea,
+.query-editor select,
+.dashboard-theme .query-editor input,
+.dashboard-theme .query-editor textarea,
+.dashboard-theme .query-editor select {
+  background: #242424 !important;
+  color: #f7f3ee !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+}
+
+.query-editor select option {
+  background: #242424;
+  color: #f7f3ee;
+}
+
+.query-editor button {
+  color: #f4f1ec !important;
+}
+
 .lead-detail-sheet {
   background: #141414 !important;
   color: #f4f1ec !important;

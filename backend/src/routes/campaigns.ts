@@ -616,7 +616,7 @@ campaignRouter.post("/:id/queries/enhance", requireAuth, async (req: Request, re
 // -----------------------------------------------------------------------------
 campaignRouter.post("/:id/queries/draft", requireAuth, async (req: Request, res: Response): Promise<void> => {
   const id = getParamId(req.params.id);
-  const { country, city, domain, focus } = req.body || {};
+  const { country, city, domain, focus, companySize } = req.body || {};
   let campaign: any = null;
   if (isDbConnected()) campaign = await Campaign.findById(id);
   else campaign = inMemoryCampaigns.get(id);
@@ -630,7 +630,7 @@ campaignRouter.post("/:id/queries/draft", requireAuth, async (req: Request, res:
       offering: campaign.offering,
       country: country || campaign.filters?.country || "IN",
       city: city || "",
-      companySize: campaign.filters?.companySize || "201-1000",
+      companySize: companySize || campaign.filters?.companySize || "201-1000",
       domains: campaign.filters?.domains || [],
       domain: domain || "",
       focus: focus || "",
@@ -640,7 +640,8 @@ campaignRouter.post("/:id/queries/draft", requireAuth, async (req: Request, res:
       objective: {
         ...draft,
         country: country || campaign.filters?.country || "IN",
-        city: city || ""
+        city: city || "",
+        companySize: companySize || campaign.filters?.companySize || "201-1000"
       }
     });
   } catch (err: any) {
