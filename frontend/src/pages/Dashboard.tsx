@@ -167,31 +167,31 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="kpi-card rounded-none border-0 bg-transparent shadow-none">
+        <Card className="kpi-card dash-tier-hot rounded-none border-0 shadow-none">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-[#e74c3c]">
+            <CardTitle className="dash-pill dash-pill-hot text-xs font-semibold uppercase tracking-wider">
               Hot Prospects
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-extrabold text-red-600 dark:text-red-400">
+            <div className="dash-tier-value text-3xl font-extrabold">
               {hotLeads}
             </div>
-            <p className="text-xs text-slate-500 mt-1">Score &ge; 70 with buying signals</p>
+            <p className="text-xs mt-1">Score &ge; 70 with buying signals</p>
           </CardContent>
         </Card>
 
-        <Card className="kpi-card rounded-none border-0 bg-transparent shadow-none">
+        <Card className="kpi-card dash-tier-warm rounded-none border-0 shadow-none">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-[#e79a3c]">
+            <CardTitle className="dash-pill dash-pill-warm text-xs font-semibold uppercase tracking-wider">
               Warm Prospects
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-extrabold text-amber-600 dark:text-amber-400">
+            <div className="dash-tier-value text-3xl font-extrabold">
               {warmLeads}
             </div>
-            <p className="text-xs text-slate-500 mt-1">Score 45–69, worth a follow-up</p>
+            <p className="text-xs mt-1">Score 45–69, worth a follow-up</p>
           </CardContent>
         </Card>
 
@@ -304,9 +304,9 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {(
           [
-            { tier: "hot", title: "Hot companies", tone: "text-red-600" },
-            { tier: "warm", title: "Warm companies", tone: "text-amber-600" },
-            { tier: "cold", title: "Cold companies", tone: "text-slate-500" }
+            { tier: "hot", title: "Hot companies", tone: "dash-pill dash-pill-hot" },
+            { tier: "warm", title: "Warm companies", tone: "dash-pill dash-pill-warm" },
+            { tier: "cold", title: "Cold companies", tone: "dash-pill dash-pill-cold" }
           ] as const
         ).map((column) => {
           const rows = companies.filter((company) => company.tier === column.tier);
@@ -436,8 +436,13 @@ export default function Dashboard() {
                           </span>
                           <span className="text-slate-400 ml-1">leads</span>
                           {camp.stats?.hot > 0 && (
-                            <span className="text-red-600 font-semibold ml-2">
-                              ({camp.stats.hot} hot)
+                            <span className="dash-pill dash-pill-hot ml-2">
+                              {camp.stats.hot} hot
+                            </span>
+                          )}
+                          {(camp.stats?.warm || 0) > 0 && (
+                            <span className="dash-pill dash-pill-warm ml-2">
+                              {camp.stats.warm} warm
                             </span>
                           )}
                         </div>

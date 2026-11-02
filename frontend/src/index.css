@@ -298,6 +298,91 @@
   color: #c7c4bf !important;
 }
 
+.score-mark,
+.dashboard-theme .score-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffffff !important;
+  background: #4a4a4a !important;
+}
+
+.dashboard-theme .score-mark-hot {
+  background: #9a4034 !important;
+  color: #fff6f3 !important;
+}
+
+.dashboard-theme .score-mark-warm {
+  background: #8d6424 !important;
+  color: #fff6e4 !important;
+}
+
+.dashboard-theme .dash-pill {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px !important;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+.dashboard-theme .dash-pill-hot,
+.dashboard-theme .dash-pill-hot * {
+  background: #9a4034 !important;
+  color: #fff6f3 !important;
+  border-color: #ffc7ba !important;
+}
+
+.dashboard-theme .dash-pill-warm,
+.dashboard-theme .dash-pill-warm * {
+  background: #8d6424 !important;
+  color: #fff6e4 !important;
+  border-color: #ffe0a3 !important;
+}
+
+.dashboard-theme .dash-pill-cold,
+.dashboard-theme .dash-pill-cold * {
+  background: #4a4a4a !important;
+  color: #f4f1ec !important;
+}
+
+.dashboard-theme .kpi-card.dash-tier-hot {
+  background: #6e342c !important;
+  border-radius: 14px !important;
+  margin: 8px !important;
+}
+
+.dashboard-theme .kpi-card.dash-tier-warm {
+  background: #6d531f !important;
+  border-radius: 14px !important;
+  margin: 8px !important;
+}
+
+.dashboard-theme .kpi-card.dash-tier-hot,
+.dashboard-theme .kpi-card.dash-tier-hot p,
+.dashboard-theme .kpi-card.dash-tier-hot .dash-tier-value,
+.dashboard-theme .kpi-card.dash-tier-warm,
+.dashboard-theme .kpi-card.dash-tier-warm p,
+.dashboard-theme .kpi-card.dash-tier-warm .dash-tier-value {
+  color: #fffaf7 !important;
+}
+
+.dashboard-theme .kpi-card.dash-tier-hot .dash-pill,
+.dashboard-theme .kpi-card.dash-tier-hot .dash-pill *,
+.dashboard-theme .kpi-card.dash-tier-warm .dash-pill,
+.dashboard-theme .kpi-card.dash-tier-warm .dash-pill * {
+  background: rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+}
+
 .dashboard-theme [class*="text-emerald"],
 .dashboard-theme [class*="text-green"],
 .dashboard-theme [class*="text-red"],

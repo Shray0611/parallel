@@ -678,10 +678,8 @@ export default function CampaignDetail() {
         </td>
         <td className="px-4 py-4">
           <div className="flex items-center gap-2">
-            <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white ${tier === "hot" ? "bg-red-600" : tier === "warm" ? "bg-amber-500" : "bg-slate-500"}`}>
-              {totalScore}
-            </div>
-            <Badge variant={tier as any} className="capitalize text-[11px]">{tier}</Badge>
+            <div className={`score-mark score-mark-${tier}`}>{totalScore}</div>
+            <span className={`dash-pill dash-pill-${tier} capitalize`}>{tier}</span>
           </div>
         </td>
         <td className="px-4 py-4 text-xs text-slate-600 dark:text-slate-300 max-w-xs line-clamp-2">
