@@ -20,7 +20,7 @@ const fixturesData: any[] = JSON.parse(fs.readFileSync(fixturesPath, "utf-8"));
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const LEADS_PER_QUERY = 3;
-const FINDALL_MATCH_LIMIT = 10;
+const FINDALL_MATCH_LIMIT = 5;
 
 function usableMatches(matches: FindAllMatch[], limit: number): FindAllMatch[] {
   const seen = new Set<string>();
@@ -403,7 +403,7 @@ async function discoverLeadsForObjective(
         url: e.url,
         description: e.description
       })),
-      matchLimit
+      Math.min(LEADS_PER_QUERY, matchLimit)
     );
     if (entityMatches.length > 0 && onBatch) {
       await onBatch(entityMatches, "entity");
@@ -447,7 +447,7 @@ async function discoverLeadsForObjective(
       await onBatch(findAllMatches, "findall");
     }
 
-    const matches = usableMatches(mergeMatches(findAllMatches, entityMatches), env.MAX_LEADS_PER_CAMPAIGN);
+    const matches = usableMatches(mergeMatches(findAllMatches, entityMatches), FINDALL_MATCH_LIMIT);
     logger.info({ objectiveIndex, matchCount: matches.length, runId }, "FindAll API discovery complete");
     return { matches, runId };
   } catch (findAllErr) {
@@ -944,7 +944,7 @@ async function runLivePipeline(campaign: any): Promise<void> {
             batch,
             idx,
             obj.objective,
-            source === "findall" ? env.MAX_LEADS_PER_CAMPAIGN : perQueryCap
+            source === "findall" ? FINDALL_MATCH_LIMIT : perQueryCap
           );
           eventBus.emitProgress({
             campaignId,
@@ -965,7 +965,7 @@ async function runLivePipeline(campaign: any): Promise<void> {
       );
 
       if (runId) findallRunIds[idx] = runId;
-      await persistMatches(matches, idx, obj.objective, runId ? env.MAX_LEADS_PER_CAMPAIGN : perQueryCap);
+      await persistMatches(matches, idx, obj.objective, runId ? FINDALL_MATCH_LIMIT : perQueryCap);
       logger.info({
         objectiveIndex: idx,
         matchCount: matches.length,
@@ -1102,8 +1102,10 @@ export async function findMoreLeads(campaignId: string, objectiveIndex: number):
   let alreadyKnown = 0;
   const seenDomains = new Set<string>();
 
-  const persistFound = async (batch: FindAllMatch[]) => {
+  const persistFound = async (batch: FindAllMatch[], source?: "entity" | "findall") => {
+    const cap = source === "findall" ? FINDALL_MATCH_LIMIT : LEADS_PER_QUERY;
     for (const match of batch) {
+      if (newLeadsCount >= cap) break;
       const identity = companyIdentity(match.name, match.url);
       if (!identity || seenDomains.has(identity.domain)) continue;
       const { website, domain } = identity;
@@ -1261,8 +1263,13 @@ export async function continueObjective(campaignId: string, objectiveIndex: numb
         campaign,
         gap,
         campaign.findallRunIds?.[objectiveIndex] || undefined,
-        async (batch) => {
+        async (batch, source) => {
+          const cap = source === "findall" ? FINDALL_MATCH_LIMIT : LEADS_PER_QUERY;
           for (const match of batch) {
+            const owned = isDbConnected()
+              ? await Lead.countDocuments({ campaignId, sourceObjectiveIndex: objectiveIndex })
+              : (inMemoryLeads.get(campaignId) || []).filter((lead: any) => lead.sourceObjectiveIndex === objectiveIndex).length;
+            if (owned >= cap) break;
             const identity = companyIdentity(match.name, match.url);
             if (!identity) continue;
             const lead = await upsertLead(campaignId, {

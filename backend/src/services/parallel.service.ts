@@ -274,7 +274,7 @@ function parseFindAllMatches(data: any): FindAllMatch[] {
 
   const matched = mapped.filter((m) => !m.matchStatus || m.matchStatus === "matched");
   const generated = mapped.filter((m) => m.matchStatus === "generated");
-  return [...matched, ...generated];
+  return matched.length > 0 ? matched : generated;
 }
 
 function parseTaskOutput(data: any): string {
