@@ -62,6 +62,7 @@ export default function CampaignDetail() {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [monitorBusyId, setMonitorBusyId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [eventLogs, setEventLogs] = useState<Array<{ time: string; msg: string; stage?: string }>>([]);
   const [showLogs, setShowLogs] = useState(false);
@@ -256,6 +257,30 @@ export default function CampaignDetail() {
 
   const isRunning = campaign?.status === "running";
   const searchLocked = isRunning || generatingQuery || Object.values(findMoreLoading).some(Boolean);
+
+  const replaceLead = (next: Lead) => {
+    const leadId = next._id || next.id;
+    setLeads((prev) => prev.map((item) => ((item._id || item.id) === leadId ? { ...item, ...next } : item)));
+    setSelectedLead((current) => (current && (current._id || current.id) === leadId ? { ...current, ...next } : current));
+  };
+
+  const handleMonitorToggle = async (lead: Lead, enabled: boolean) => {
+    const leadId = lead._id || lead.id || "";
+    if (!leadId || monitorBusyId) return;
+    setMonitorBusyId(leadId);
+    try {
+      const res = await apiRequest<{ lead: Lead }>(`/leads/${leadId}/monitor`, {
+        method: "POST",
+        body: JSON.stringify({ enabled })
+      });
+      replaceLead(res.lead);
+      toast.success(enabled ? `Weekly monitor is on for ${lead.name}` : `Weekly monitor is off for ${lead.name}`);
+    } catch (err: any) {
+      toast.error(err.message || "Could not change monitoring");
+    } finally {
+      setMonitorBusyId("");
+    }
+  };
 
   const handleStatusChange = async (leadId: string, newStatus: Lead["status"]) => {
     try {
@@ -675,10 +700,21 @@ export default function CampaignDetail() {
             <option value="lost">Lost</option>
           </select>
         </td>
-        <td className="px-4 py-4 text-right">
-          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openLeadDetail(lead); }} className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400">
-            Details <ChevronRight className="h-3 w-3 ml-1" />
-          </Button>
+        <td className="px-4 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+          <div className="inline-flex items-center gap-1">
+            <button
+              type="button"
+              className={`monitor-toggle ${lead.monitorId ? "is-on" : ""}`}
+              disabled={monitorBusyId === leadId}
+              onClick={() => handleMonitorToggle(lead, !lead.monitorId)}
+            >
+              <Activity className="h-3 w-3" />
+              {monitorBusyId === leadId ? "Saving" : lead.monitorId ? "Watching" : "Watch"}
+            </button>
+            <Button variant="ghost" size="sm" onClick={() => openLeadDetail(lead)} className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400">
+              Details <ChevronRight className="h-3 w-3 ml-1" />
+            </Button>
+          </div>
         </td>
       </tr>
     );
@@ -1492,6 +1528,67 @@ export default function CampaignDetail() {
                   ))}
                 </CardContent>
               </Card>
+
+              <div className="space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-bold flex items-center gap-1.5">
+                        <Activity className="h-4 w-4" /> Weekly monitor
+                      </h3>
+                      <p className="detail-muted text-xs mt-1">Funding, hiring, and expansion. Turn this on for any company you want to keep watching.</p>
+                    </div>
+                    <button
+                      type="button"
+                      className={`monitor-toggle ${selectedLead.monitorId ? "is-on" : ""}`}
+                      disabled={monitorBusyId === (selectedLead._id || selectedLead.id)}
+                      onClick={() => handleMonitorToggle(selectedLead, !selectedLead.monitorId)}
+                    >
+                      <Activity className="h-3 w-3" />
+                      {monitorBusyId === (selectedLead._id || selectedLead.id)
+                        ? "Saving"
+                        : selectedLead.monitorId
+                        ? "On"
+                        : "Off"}
+                    </button>
+                  </div>
+                  {!selectedLead.monitorId ? (
+                    <div className="space-y-2">
+                      <div className="detail-callout">
+                        <span className="detail-kicker">Monitor off</span>
+                        <p>{(selectedLead.monitorUpdates || []).length > 0 ? "Past updates stay below. Turn it on to start a new weekly check." : "Turn it on to watch this company every week."}</p>
+                      </div>
+                      {(selectedLead.monitorUpdates || []).map((update) => (
+                        <div key={update.eventId || update.summary} className="detail-callout">
+                          <span className="detail-kicker">{update.eventDate || "Earlier update"}</span>
+                          <p>{update.summary}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (selectedLead.monitorUpdates || []).length === 0 ? (
+                    <div className="detail-callout">
+                      <span className="detail-kicker">No changes yet</span>
+                      <p>The watch is on. Updates appear here after the next weekly check.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {(selectedLead.monitorUpdates || []).map((update) => (
+                        <div key={update.eventId || update.summary} className="detail-callout">
+                          <span className="detail-kicker">{update.eventDate || "Update"}</span>
+                          <p>{update.summary}</p>
+                          {update.sources?.length > 0 && (
+                            <div className="mt-2 flex flex-col gap-1">
+                              {update.sources.map((source) => (
+                                <a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer" className="text-xs truncate">
+                                  {source.title || source.url}
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
               {/* Why This Company */}
               <div className="space-y-3">

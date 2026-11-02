@@ -103,7 +103,59 @@ export interface MonitorResponse {
   [key: string]: any;
 }
 
+export interface MonitorUpdate {
+  eventId: string;
+  eventType: string;
+  eventDate: string;
+  summary: string;
+  sources: Array<{ url: string; title: string }>;
+}
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function monitorSummary(event: any): string {
+  const eventType = String(event?.event_type || event?.type || "");
+  if (eventType === "completion") return "Checked this week. No material change.";
+  if (eventType === "error") {
+    return String(event?.error?.message || event?.message || "The weekly check failed.");
+  }
+  const content = event?.output?.content ?? event?.output ?? event?.result;
+  if (typeof content === "string" && content.trim()) return content.trim().slice(0, 1200);
+  if (content && typeof content === "object") {
+    const text = content.summary || content.text || content.description;
+    if (typeof text === "string" && text.trim()) return text.trim().slice(0, 1200);
+    try {
+      return JSON.stringify(content).slice(0, 1200);
+    } catch {
+      return "";
+    }
+  }
+  return "";
+}
+
+function monitorSources(event: any): Array<{ url: string; title: string }> {
+  const basis = Array.isArray(event?.output?.basis) ? event.output.basis : [];
+  const sources: Array<{ url: string; title: string }> = [];
+  for (const item of basis) {
+    const citations = Array.isArray(item?.citations) ? item.citations : [];
+    for (const citation of citations) {
+      const url = String(citation?.url || citation?.source_url || "").trim();
+      if (!url || sources.some((source) => source.url === url)) continue;
+      sources.push({ url, title: String(citation?.title || citation?.name || "").trim() });
+    }
+  }
+  return sources.slice(0, 3);
+}
+
+function normalizeMonitorEvent(event: any): MonitorUpdate {
+  return {
+    eventId: String(event?.event_id || event?.id || ""),
+    eventType: String(event?.event_type || event?.type || "event_stream"),
+    eventDate: String(event?.event_date || event?.date || "").slice(0, 10),
+    summary: monitorSummary(event),
+    sources: monitorSources(event)
+  };
+}
 
 function parallelHeaders() {
   return {
@@ -221,7 +273,8 @@ function parseFindAllMatches(data: any): FindAllMatch[] {
     .filter((m: FindAllMatch) => Boolean(m.name || m.url));
 
   const matched = mapped.filter((m) => !m.matchStatus || m.matchStatus === "matched");
-  return matched.length > 0 ? matched : mapped;
+  const generated = mapped.filter((m) => m.matchStatus === "generated");
+  return [...matched, ...generated];
 }
 
 function parseTaskOutput(data: any): string {
@@ -780,6 +833,25 @@ export class ParallelService {
       query,
       schedule
     };
+  }
+
+  static async cancelMonitor(monitorId: string): Promise<void> {
+    logger.info({ monitorId }, "Parallel Monitor API: cancelling lead monitor");
+    await parallelFetch(`/v1/monitors/${encodeURIComponent(monitorId)}/cancel`, { method: "POST" });
+  }
+
+  static async listMonitorEvents(monitorId: string, limit: number = 8): Promise<MonitorUpdate[]> {
+    const data: any = await parallelFetch(
+      `/v1/monitors/${encodeURIComponent(monitorId)}/events?limit=${limit}&include_completions=true`,
+      { method: "GET" }
+    );
+    const events = Array.isArray(data?.events) ? data.events : [];
+    const updates = events
+      .map((event: any) => normalizeMonitorEvent(event))
+      .filter((event: MonitorUpdate) => event.summary);
+    const changes = updates.filter((event: MonitorUpdate) => event.eventType !== "completion");
+    const latestCheck = updates.find((event: MonitorUpdate) => event.eventType === "completion");
+    return (latestCheck ? [...changes, latestCheck] : changes).slice(0, 8);
   }
 
   static async ping(): Promise<boolean> {

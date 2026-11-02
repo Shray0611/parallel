@@ -116,6 +116,15 @@ export interface Lead {
   taskResearch?: string;
   taskRunId?: string;
   monitorId?: string;
+  monitorEnabled?: boolean;
+  monitorCheckedAt?: string;
+  monitorUpdates?: Array<{
+    eventId: string;
+    eventType: string;
+    eventDate: string;
+    summary: string;
+    sources: Array<{ url: string; title: string }>;
+  }>;
   findallAttributes?: Record<string, string | number | boolean>;
   enrichment?: {
     results: EnrichmentResult[];

@@ -352,7 +352,7 @@ export class GeminiService {
   ): Promise<IcpOutput> {
     const cacheKey = { action: "generate_icp", offering, valueProps, filters };
     const run = async () => {
-      const systemPrompt = `You are a B2B sales strategist for Cerelabs, an enterprise AI products company.
+      const systemPrompt = `You are an expert B2B sales strategist and lead generation director.
 You must output a JSON object with:
 1. "icp": {
      "summary": string,
@@ -373,7 +373,7 @@ CRITICAL RULES for searchObjectives:
 - "rationale" is one sentence on why this angle fits the offering.
 - Keep each objective distinct. Do not repeat the same sentence with a swapped industry noun only when a real workflow difference exists; change the workflow, not just the label.`;
 
-      const userPrompt = `Cerelabs Offering: ${offering}
+      const userPrompt = `Product / Service Offering: ${offering}
 Core Value Propositions:
 ${valueProps.map((vp) => `- ${vp}`).join("\n")}
 
@@ -400,7 +400,7 @@ Filters:
     domain?: string;
   }) {
     const place = placeLabel(input.country, input.city);
-    const systemPrompt = `You improve one B2B company-discovery objective for Cerelabs.
+    const systemPrompt = `You improve one B2B company-discovery objective.
 Return JSON: { "domain": string, "objective": string, "rationale": string, "queries": string[3] }.
 The objective is one sentence a company search engine will receive. It must name the industry, the place "${place}", and size "${input.companySize} employees".
 queries are exactly 3 phrases of 3 to 6 words. No company names. No site: operators.
@@ -426,7 +426,7 @@ Current rationale: ${input.rationale || ""}`;
     focus?: string;
   }) {
     const place = placeLabel(input.country, input.city);
-    const systemPrompt = `You write one new B2B company-discovery objective for an existing Cerelabs campaign.
+    const systemPrompt = `You write one new B2B company-discovery objective for an existing campaign.
 Return JSON: { "domain": string, "objective": string, "rationale": string, "queries": string[3] }.
 The user has already chosen the location and industry. Do not change them.
 Use industry "${input.domain || input.domains[0] || "Enterprise"}".
@@ -471,7 +471,7 @@ RULES for search_queries:
 
       const userPrompt = `Company Name: ${companyName}
 Company Description: ${description}
-Cerelabs Product Offering: ${offering}`;
+Product / Service Offering: ${offering}`;
 
       return await callLLMWithFallback(systemPrompt, userPrompt, leadQueryOutputSchema);
     });
@@ -489,7 +489,7 @@ Cerelabs Product Offering: ${offering}`;
     const cacheKey = { action: "score_lead", companyName, description, offering, excerpts: combinedExcerpts };
 
     return cached("gemini", cacheKey, async () => {
-      const systemPrompt = `You are an enterprise AI deal qualification director and outreach copywriter for Cerelabs.
+      const systemPrompt = `You are an enterprise B2B deal qualification director and outreach copywriter.
 You evaluate companies against an Ideal Customer Profile (ICP) based on live web evidence, assign a 0-100 score, and write tailored outreach.
 
 Output JSON matching this exact structure:
@@ -503,7 +503,7 @@ Output JSON matching this exact structure:
     "reasons": string[] (3-4 bullet points justifying the score),
     "whyNow": string (a concise signal why reaching out now makes sense),
     "pitchAngle": string (recommended strategic angle to pitch "${offering}"),
-    "recommendedProduct": string (specific Cerelabs product capability),
+    "recommendedProduct": string (specific product or service capability),
     "estimatedSize": string,
     "industry": string,
     "location": string,

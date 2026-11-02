@@ -556,6 +556,45 @@
   color: #f4f1ec !important;
 }
 
+.monitor-toggle,
+.dashboard-theme .monitor-toggle,
+.lead-detail-sheet .monitor-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  background: #3a3a3a !important;
+  color: #f7f3ee !important;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.monitor-toggle.is-on,
+.dashboard-theme .monitor-toggle.is-on,
+.lead-detail-sheet .monitor-toggle.is-on {
+  background: #2f6b52 !important;
+  border-color: #8ee0bc !important;
+  color: #e9fff4 !important;
+}
+
+.monitor-toggle:disabled,
+.lead-detail-sheet .monitor-toggle:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.monitor-toggle svg,
+.dashboard-theme .monitor-toggle svg,
+.lead-detail-sheet .monitor-toggle svg,
+.lead-detail-sheet .monitor-toggle span {
+  color: inherit !important;
+}
+
 .lead-detail-sheet .detail-monitor {
   display: inline-flex;
   align-items: center;

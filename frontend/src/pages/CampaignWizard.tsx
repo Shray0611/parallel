@@ -15,7 +15,8 @@ import {
   X,
   Target,
   Edit2,
-  Loader2
+  Loader2,
+  Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -149,6 +150,18 @@ export default function CampaignWizard() {
     const updated = [...searchObjectives];
     const queries = [...(updated[index].queries || [])];
     queries[queryIndex] = newText;
+    updated[index] = { ...updated[index], queries };
+    setSearchObjectives(updated);
+  };
+
+  const removeObjective = (index: number) => {
+    setSearchObjectives(searchObjectives.filter((_, itemIndex) => itemIndex !== index));
+  };
+
+  const removeQuery = (index: number, queryIndex: number) => {
+    const updated = [...searchObjectives];
+    const queries = [...(updated[index].queries || [])];
+    queries.splice(queryIndex, 1);
     updated[index] = { ...updated[index], queries };
     setSearchObjectives(updated);
   };
@@ -600,10 +613,20 @@ export default function CampaignWizard() {
                           <span className="font-medium text-blue-600 dark:text-blue-400">Plan {idx + 1}</span>
                           {obj.domain && <Badge variant="secondary">{obj.domain}</Badge>}
                         </div>
-                        <span className="flex items-center gap-1 text-slate-400">
-                          <Edit2 className="h-3 w-3" />
-                          Edit before send
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center gap-1 text-slate-400">
+                            <Edit2 className="h-3 w-3" />
+                            Edit before send
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removeObjective(idx)}
+                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-rose-600 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/40"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            Delete plan
+                          </button>
+                        </div>
                       </div>
 
                       <div className="space-y-1">
@@ -623,12 +646,21 @@ export default function CampaignWizard() {
                           Keyword queries sent with this plan
                         </label>
                         {(obj.queries || []).map((query, queryIndex) => (
-                          <input
-                            key={queryIndex}
-                            value={query}
-                            onChange={(e) => updateQuery(idx, queryIndex, e.target.value)}
-                            className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800"
-                          />
+                          <div key={queryIndex} className="flex items-center gap-2">
+                            <input
+                              value={query}
+                              onChange={(e) => updateQuery(idx, queryIndex, e.target.value)}
+                              className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800"
+                            />
+                            <button
+                              type="button"
+                              aria-label="Delete query"
+                              onClick={() => removeQuery(idx, queryIndex)}
+                              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-300"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         ))}
                       </div>
 

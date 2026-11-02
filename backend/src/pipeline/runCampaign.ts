@@ -20,6 +20,7 @@ const fixturesData: any[] = JSON.parse(fs.readFileSync(fixturesPath, "utf-8"));
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const LEADS_PER_QUERY = 3;
+const FINDALL_MATCH_LIMIT = 10;
 
 function usableMatches(matches: FindAllMatch[], limit: number): FindAllMatch[] {
   const seen = new Set<string>();
@@ -287,19 +288,21 @@ async function enrichAndScoreLead(
 
     if (scored.score.tier === "hot") {
       hotCount++;
-      // 5. Parallel Monitor API: Track hot lead over time for funding/hiring news
-      try {
-        const monitorRes = await ParallelService.createMonitor(
-          `Material changes, leadership hiring, funding, and expansion news for ${lead.name} (${lead.domain})`,
-          "weekly"
-        );
-        campaign.stats.apiCalls.parallelMonitor = (campaign.stats.apiCalls.parallelMonitor || 0) + 1;
-        if (monitorRes?.id || monitorRes?.monitor_id) {
-          lead.monitorId = monitorRes.id || monitorRes.monitor_id;
+      if (lead.monitorEnabled !== false && !lead.monitorId) {
+        try {
+          const monitorRes = await ParallelService.createMonitor(
+            `Material changes, leadership hiring, funding, and expansion news for ${lead.name} (${lead.domain})`,
+            "weekly"
+          );
+          campaign.stats.apiCalls.parallelMonitor = (campaign.stats.apiCalls.parallelMonitor || 0) + 1;
+          if (monitorRes?.id || monitorRes?.monitor_id) {
+            lead.monitorId = monitorRes.id || monitorRes.monitor_id;
+            lead.monitorEnabled = true;
+          }
+        } catch (err) {
+          if (isRateLimitError(err)) throw err;
+          logger.debug({ err, lead: lead.name }, "Monitor registration skipped (non-fatal)");
         }
-      } catch (err) {
-        if (isRateLimitError(err)) throw err;
-        logger.debug({ err, lead: lead.name }, "Monitor registration skipped (non-fatal)");
       }
     } else if (scored.score.tier === "warm") {
       warmCount++;
@@ -311,7 +314,8 @@ async function enrichAndScoreLead(
       await Lead.findByIdAndUpdate(lead._id, {
         score: lead.score,
         outreach: lead.outreach,
-        monitorId: lead.monitorId
+        monitorId: lead.monitorId,
+        monitorEnabled: lead.monitorEnabled
       });
     }
 
@@ -424,7 +428,7 @@ async function discoverLeadsForObjective(
 
     if (existingRunId) {
       try {
-        await ParallelService.findAllExtend(existingRunId, matchLimit);
+        await ParallelService.findAllExtend(existingRunId, FINDALL_MATCH_LIMIT);
         campaign.stats.apiCalls.parallelFindAll = (campaign.stats.apiCalls.parallelFindAll || 0) + 1;
       } catch (extendErr) {
         logger.warn({ err: extendErr, objectiveIndex, existingRunId }, "FindAll extend failed — keeping the current run");
@@ -433,7 +437,7 @@ async function discoverLeadsForObjective(
       findAllMatches = extended.matches || [];
       runId = existingRunId;
     } else {
-      const result = await ParallelService.findAllDiscover(locatedObjective, matchConditions, Math.max(5, matchLimit), false, findAllWait);
+      const result = await ParallelService.findAllDiscover(locatedObjective, matchConditions, FINDALL_MATCH_LIMIT, false, findAllWait);
       campaign.stats.apiCalls.parallelFindAll = (campaign.stats.apiCalls.parallelFindAll || 0) + 1;
       findAllMatches = result.matches;
       runId = result.runId;
@@ -443,7 +447,7 @@ async function discoverLeadsForObjective(
       await onBatch(findAllMatches, "findall");
     }
 
-    const matches = usableMatches(mergeMatches(findAllMatches, entityMatches), matchLimit);
+    const matches = usableMatches(mergeMatches(findAllMatches, entityMatches), env.MAX_LEADS_PER_CAMPAIGN);
     logger.info({ objectiveIndex, matchCount: matches.length, runId }, "FindAll API discovery complete");
     return { matches, runId };
   } catch (findAllErr) {
@@ -687,13 +691,14 @@ async function runDemoPipeline(campaign: any): Promise<void> {
 
     const outreach = item.outreach || {
       subject: `Accelerating document intelligence for ${lead.name}`,
-      email: `Hi ${lead.name} Team,\n\nWe build high-performance ${campaign.offering} tailored for enterprise workflows.\n\nBest,\nCerelabs Team`,
+      email: `Hi ${lead.name} Team,\n\nWe build high-performance ${campaign.offering} tailored for enterprise workflows.\n\nBest,\nOur Team`,
       linkedinNote: `Hi! Impressed by ${lead.name}'s growth. We build enterprise AI to automate document workflows. Let's connect!`
     };
 
     if (score.tier === "hot") {
       hotCount++;
       lead.monitorId = `monitor-demo-${i}`;
+      lead.monitorEnabled = true;
     } else if (score.tier === "warm") {
       warmCount++;
     } else {
@@ -707,7 +712,8 @@ async function runDemoPipeline(campaign: any): Promise<void> {
       await Lead.findByIdAndUpdate(lead._id, {
         score,
         outreach,
-        monitorId: lead.monitorId
+        monitorId: lead.monitorId,
+        monitorEnabled: lead.monitorEnabled
       });
     }
 
@@ -846,10 +852,10 @@ async function runLivePipeline(campaign: any): Promise<void> {
     });
   }
 
-  const persistMatches = async (matches: FindAllMatch[], idx: number, sourceObjectiveQuery: string) => {
+  const persistMatches = async (matches: FindAllMatch[], idx: number, sourceObjectiveQuery: string, cap: number = perQueryCap) => {
     for (const match of matches) {
       const owned = createdLeads.filter((lead) => lead.sourceObjectiveIndex === idx).length;
-      if (owned >= perQueryCap || createdLeads.length >= env.MAX_LEADS_PER_CAMPAIGN) break;
+      if (owned >= cap || createdLeads.length >= env.MAX_LEADS_PER_CAMPAIGN) break;
       const identity = companyIdentity(match.name, match.url);
       if (!identity) continue;
       const { website, domain } = identity;
@@ -933,8 +939,13 @@ async function runLivePipeline(campaign: any): Promise<void> {
         campaign,
         perQueryCap - already.length,
         undefined,
-        async (batch) => {
-          await persistMatches(batch, idx, obj.objective);
+        async (batch, source) => {
+          await persistMatches(
+            batch,
+            idx,
+            obj.objective,
+            source === "findall" ? env.MAX_LEADS_PER_CAMPAIGN : perQueryCap
+          );
           eventBus.emitProgress({
             campaignId,
             stage: "discover",
@@ -954,7 +965,7 @@ async function runLivePipeline(campaign: any): Promise<void> {
       );
 
       if (runId) findallRunIds[idx] = runId;
-      await persistMatches(matches, idx, obj.objective);
+      await persistMatches(matches, idx, obj.objective, runId ? env.MAX_LEADS_PER_CAMPAIGN : perQueryCap);
       logger.info({
         objectiveIndex: idx,
         matchCount: matches.length,

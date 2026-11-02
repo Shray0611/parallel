@@ -53,6 +53,15 @@ export interface ILead extends Document {
   taskResearch?: string;
   taskRunId?: string;
   monitorId?: string;
+  monitorEnabled?: boolean;
+  monitorCheckedAt?: Date;
+  monitorUpdates?: Array<{
+    eventId: string;
+    eventType: string;
+    eventDate: string;
+    summary: string;
+    sources: Array<{ url: string; title: string }>;
+  }>;
   findallAttributes?: Record<string, any>;
   enrichment?: ILeadEnrichment;
   score?: ILeadScore;
@@ -83,6 +92,23 @@ const leadSchema = new Schema<ILead>(
     taskResearch: { type: String, default: '' },
     taskRunId: { type: String, default: '' },
     monitorId: { type: String, default: '' },
+    monitorEnabled: { type: Boolean },
+    monitorCheckedAt: { type: Date },
+    monitorUpdates: {
+      type: [
+        {
+          eventId: { type: String, default: "" },
+          eventType: { type: String, default: "" },
+          eventDate: { type: String, default: "" },
+          summary: { type: String, default: "" },
+          sources: {
+            type: [{ url: { type: String, default: "" }, title: { type: String, default: "" } }],
+            default: []
+          }
+        }
+      ],
+      default: []
+    },
     findallAttributes: { type: Schema.Types.Mixed, default: {} },
     enrichment: {
       results: [
